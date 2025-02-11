@@ -1,3 +1,9 @@
+# venv
+sesac/
+
+# large file
+google-chrome-stable_current_amd64.deb
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -169,3 +175,6 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# settings.py
+settings.py
