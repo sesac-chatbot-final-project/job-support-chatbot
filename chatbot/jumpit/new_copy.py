@@ -64,16 +64,16 @@ class JobAssistantBot:
             """
             사용자 입력을 분석하여 다음 중 하나로 분류하여 결과로 출력하세요:
             - JOB_SEARCH
-            : 직무를 입력하며 채용 공고를 탐색
-            : 공고 번호를 입력하며 상세 정보를 요청
+              : 직무를 입력하며 채용 공고를 탐색
+              : 공고 번호를 입력하며 상세 정보를 요청
             - COVER_LETTER
-            : 공고 번호를 입력하며 작성을 요청
-            : 사용자가 본인의 경험 혹은 직무 등을 입력
-            : 자기소개서 수정을 요청
+              : 공고 번호를 입력하며 작성을 요청
+              : 사용자가 본인의 경험 혹은 직무 등을 입력
+              : 자기소개서 수정을 요청
             - INTERVIEW
-            : 면접 연습을 요청
+              : 면접 연습을 요청
             - UNKNOWN
-            : 서비스와 상관없는 내용 입력
+              : 서비스와 상관없는 내용 입력
 
             예시 입력: "백엔드 개발자 공고 알려줘"
             예시 출력: JOB_SEARCH
@@ -85,11 +85,11 @@ class JobAssistantBot:
             """
             사용자의 입력을 분석하여 사용자의 의도를 판단하여 결과로 출력하세요:
             - 채용 공고 제공
-            : 사용자가 특정 직무에 대한 채용 공고를 요청하는 경우
+              : 사용자가 특정 직무에 대한 채용 공고를 요청하는 경우
             - 상세 정보
-            : 사용자가 공고의 상세 내용을 요청하는 경우
+              : 사용자가 공고의 상세 내용을 요청하는 경우
             - 관련 없음
-            : 채용 공고 탐색 기능과 관계 없는 입력
+              : 채용 공고 탐색 기능과 관계 없는 입력
 
             상세 정보의 경우 사용자가 입력한 공고 번호를 쉼표로 구분해 함께 리스트로 출력해주세요.
             채용 공고 제공과 관련 없음의 경우 -1을 리스트로 함께 출력해주세요.
@@ -110,10 +110,10 @@ class JobAssistantBot:
             """
             사용자의 입력을 분석하여 직무 관련 키워드가 포함되어 있는지 판단하세요:
             - include
-            : '백엔드', '프론트엔드', '개발자', '프로그래머', 'AI', '인공지능', '데이터' 등 
-              직무나 기술 스택 관련 키워드가 포함된 경우
+              : '백엔드', '프론트엔드', '개발자', '프로그래머', 'AI', '인공지능', '데이터' 등 
+                직무나 기술 스택 관련 키워드가 포함된 경우
             - not_include
-            : 직무 관련 키워드가 전혀 포함되어 있지 않은 경우
+              : 직무 관련 키워드가 전혀 포함되어 있지 않은 경우
 
             예시 입력: "백엔드 공고 보여줘"
             예시 출력: include
@@ -178,14 +178,15 @@ class JobAssistantBot:
             """
             사용자의 입력을 분석하여 사용자의 의도를 판단하여 결과로 출력하세요:
             - 자기소개서 작성
-            : 사용자가 자기소개서 작성을 요청하는 경우
-            : 사용자가 자신의 경험, 프로젝트, 기술 스택, 직무와 관련된 내용을 입력한 경우 (명확한 요청이 없어도 포함)
-            : 사용자가 특정 경험을 입력한 후 자기소개서와 관련될 가능성이 높은 경우
+              : 사용자가 자기소개서 작성을 요청하는 경우
+              : 사용자가 자신의 경험, 프로젝트, 기술 스택, 직무와 관련된 내용을 입력한 경우 (명확한 요청이 없어도 포함)
+              : 사용자가 특정 경험을 입력한 후 자기소개서와 관련될 가능성이 높은 경우
+              : 숫자를 입력한 경우
             - 자기소개서 수정
-            : 사용자가 자기소개서 수정을 요청하는 경우
-            : 특정 문장을 수정해달라고 요청하는 경우
+              : 사용자가 자기소개서 수정을 요청하는 경우
+              : 특정 문장을 수정해달라고 요청하는 경우
             - 관련 없음
-            : 자기소개서 기능과 관계 없는 입력 (일반적인 질문, 잡담 등)
+              : 자기소개서 기능과 관계 없는 입력 (일반적인 질문, 잡담 등)
 
             사용자 입력에 숫자와 관련된 단어 혹은 숫자가 있다면 해당 숫자를 쉼표로 구분해 함께 리스트로 출력해주세요.
             숫자 관련 단어 혹은 숫자가 없는 경우 -1을 리스트로 함께 출력해주세요.
@@ -210,7 +211,7 @@ class JobAssistantBot:
             """
             사용자의 입력을 분석하여 경험이 포함되어 있는지 판단하세요:
             - experience_include
-            : 경험이 포함되어 있는 경우
+              : 경험이 포함되어 있는 경우
 
             경험은 프로젝트, 경력 등 사용자가 이전에 수행했던 내용을 포함해야 합니다.
             경험이 포함되어 있는 경우 "experience_include"를,
@@ -223,13 +224,13 @@ class JobAssistantBot:
             """
             사용자의 입력을 분석하여 직무와 경험이 포함되어 있는지 판단하세요:
             - job_include
-            : 직무가 포함되어 있는 경우
+              : 직무가 포함되어 있는 경우
             - experience_include
-            : 경험이 포함되어 있는 경우
+              : 경험이 포함되어 있는 경우
             - all_include
-            : 직무와 경험이 모두 포함되어 있는 경우
+              : 직무와 경험이 모두 포함되어 있는 경우
             - not_include
-            : 직무와 경험이 모두 포함되어 있지 않는 경우
+              : 직무와 경험이 모두 포함되어 있지 않는 경우
 
             직무는 'AI', '백엔드', '프론트엔드', '개발자'와 같은 키워드들을 포함해야 합니다.
             경험은 프로젝트, 경력 등 사용자가 이전에 수행했던 내용을 포함해야 합니다.
@@ -271,7 +272,8 @@ class JobAssistantBot:
             4. 입사 후 포부
 
             각 항목을 사용자의 경험과 직무 정보를 포함하여 구체적으로 작성하세요. 
-            각 항목 별로 공백을 포함하지 않고 500자에서 700자 사이로 작성해주세요.    
+            각 항목마다 공백을 포함하지 않고 700자 내외로 작성해주세요.
+	        네 항목이므로 총 글자수가 공백을 포함하지 않고 3000자 내외로 나와야 합니다.
             결과:""")
         
         self.cover_letter_refine = PromptTemplate.from_template(
@@ -286,10 +288,10 @@ class JobAssistantBot:
             기존 내용의 일관성을 유지하면서 수정사항을 반영해주세요.            
             결과: """)
 
-    # 분기점
+    # 분기점: intent 분류
     def classify_intent(self, state: State) -> State:
         intent = str(self.llm.invoke(self.intent_template.format(user_input=state["user_input"])).content).strip()
-        if intent not in ["JOB_SEARCH", "COVER_LETTER", "UNKNOWN"]:  # 추후 인터뷰 추가
+        if intent not in ["JOB_SEARCH", "COVER_LETTER", "UNKNOWN"]:
             intent = "UNKNOWN"
         print(f"Classified intent: {intent}")  # 디버깅용 출력
         return {**state, "intent": intent}
@@ -337,7 +339,7 @@ class JobAssistantBot:
         cursor = self.db.cursor()
         search_keyword = str(self.llm.invoke(self.jobname_extract_prompt.format(user_input=state["user_input"])).content).strip()
         print(search_keyword)
-        search_keywords = [kw.strip() for kw in search_keyword.split(', ') if kw.strip()]
+        search_keywords = [kw.strip() for kw in search_keyword.split(',') if kw.strip()]
         print(search_keywords)
         
         if not search_keywords:
@@ -410,9 +412,9 @@ class JobAssistantBot:
                 self.save_jobs_to_table(result)
                 
                 if result:
-                    for i, job in enumerate(result[:5], 1):
+                    for i, job in enumerate(result[:20], 1):
                         response += (
-                            f"{i}.  {job[0]} - {job[1]}\n"
+                            f"{i}.  {job[0]}\n"
                             f"회사명: {job[1]}\n"
                             f"기술스택: {job[2]}\n"
                             f"근무지: {job[3]}\n"
@@ -421,10 +423,10 @@ class JobAssistantBot:
                             f"[지원 링크] ({job[6]})\n\n"
                         )
                     response += (
-                        f"상세 정보 (주요 업무, 자격 요건, 우대사항, 복지 및 혜택, 채용절차, 학력, 근무지역 상세, 마감일자) 를 알고 싶으시면 키워드를 입력해주세요.\n"
-                        f"모든 상세 정보를 알고 싶으시면 상세 정보라고 입력해주세요.\n"
-                        f"공고를 선택해 맞춤형 자기소개서 초안을 작성하고 싶으시면 공고 번호와 자기소개서 키워드를 입력해주세요.\n"
-                        f"공고를 선택해 맞춤형 면접 연습을 진행하고 싶으시면 공고 번호와 면접 키워드를 입력해주세요.\n"
+                        "상세 정보 (주요 업무, 자격 요건, 우대사항, 복지 및 혜택, 채용절차, 학력, 근무지역 상세, 마감일자) 를 알고 싶으시면 원하시는 공고와 키워드를 입력해주세요.\n"
+                        "모든 상세 정보를 알고 싶으시면 원하시는 공고 번호와 함께 상세 정보라고 입력해주세요.\n"
+                        "공고를 선택해 맞춤형 자기소개서 초안을 작성하고 싶으시면 원하시는 공고 번호와 자기소개서 작성을 입력해주세요.\n"
+                        "공고를 선택해 맞춤형 면접 연습을 진행하고 싶으시면 원하시는 공고 번호와 면접 연습을 입력해주세요.\n"
                     )
                     return {**state, "response": response, "selected_job": num, "job_search": True}
                 else:
@@ -450,7 +452,6 @@ class JobAssistantBot:
 
                 # LLM이 자연스럽게 답변 생성
                 response = str(self.llm.invoke(self.natural_response.format(extracted_info=extracted_info)).content).strip()
-
 
                 return {**state, "response": response, "selected_job": num, "job_search": True}
             else:
@@ -614,8 +615,8 @@ class JobAssistantBot:
 
             response += refine_cover_letter
             response += (
-                f"수정된 자기소개서의 추가적인 수정을 원하시면 수정 요청 사항을 입력해주세요."
-                f"작성된 자기소개서로 맞춤형 면접 연습을 진행하고 싶으시면 면접을 입력해주세요."
+                "수정된 자기소개서의 추가적인 수정을 원하시면 수정 요청 사항을 입력해주세요."
+                "작성된 자기소개서로 맞춤형 면접 연습을 진행하고 싶으시면 면접 연습을 입력해주세요."
             )
             return {**state, "response": refine_cover_letter, "cover_letter": refine_cover_letter}
 

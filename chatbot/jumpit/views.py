@@ -8,6 +8,7 @@ state = {
     "user_input": "",
     "chat_history": [],
     "intent": None,
+    "previous_intent": None,
     "intent_search_job": None,
     "job_name": "",
     "selected_job": None,

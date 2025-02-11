@@ -3,6 +3,7 @@ import re
 import time
 import pymysql
 import requests
+from dotenv import load_dotenv
 import pandas as pd
 import chromedriver_autoinstaller
 from bs4 import BeautifulSoup
@@ -17,6 +18,8 @@ import pytz
 
 # 한국 시간 설정
 KST = pytz.timezone("Asia/Seoul")
+
+load_dotenv()
 
 # MariaDB 연결 설정
 db = pymysql.connect(
@@ -92,6 +95,7 @@ def preprocess_job_details(details):
     remove_words_map = {
         "근무지역_상세": ["지도보기·주소복사"],
     }
+    
 
     for key, words in remove_words_map.items():
         if key in details and details[key] != "정보 없음":
@@ -103,6 +107,11 @@ def preprocess_job_details(details):
         details["채용절차"] = "정보 없음"
 
     return details
+
+# skill 데이터 전처리 함수 추가
+def preprocess_skill(skill_text):
+    """skill 데이터를 · 기호는 ','로 변경하고, 엔터는 공백으로 변환"""
+    return skill_text.replace("·", ",").replace("\n", "").strip()
 
 def scrape_job_details(job_link):
     """공고 상세 정보 크롤링"""
@@ -183,7 +192,7 @@ def scrape_jobs():
 
                 # 제목에 한글 변환 + 원래 영어 추가
                 title = translate_eng_to_kor_with_original(title)
-
+                skill = preprocess_skill(skill)
                 job_data.append((title, company_name, skill, loc, condition, date, job_url))
 
             except Exception as e:
