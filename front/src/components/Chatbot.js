@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -7,6 +8,8 @@ import {
   faAngleRight,
   faUserCircle,
   faCog,
+  faMicrophone,
+  faStopCircle,
 } from "@fortawesome/free-solid-svg-icons";
 
 // Custom hook for auto-scrolling
@@ -42,8 +45,15 @@ const Chatbot = () => {
   const navigate = useNavigate();
   const scrollRef = useAutoScroll(messages);
 
+  // ===== 음성(STT) 관련 상태 및 ref =====
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState(null);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcription, setTranscription] = useState("");
+  const mediaRecorderRef = useRef(null);
+  // ======================================
+
   // Ref to ensure the initial messages are set only once
-  // (This prevents duplicate initialization in React Strict Mode)
   const didInit = useRef(false);
 
   // Function to process text and convert URLs to clickable links
@@ -147,7 +157,7 @@ const Chatbot = () => {
     return "죄송합니다. 1, 2, 3 중에서 선택해주시거나, 구체적인 질문을 해주세요.";
   };
 
-  // Sends a message to the backend API and displays the responses
+  // Sends a text message to the backend API and displays the responses
   const sendMessage = async () => {
     if (!input.trim()) return;
     const userInput = input;
@@ -182,6 +192,91 @@ const Chatbot = () => {
       setIsLoading(false);
     }
   };
+
+  // ===== 음성 녹음 및 STT (Whisper API) 관련 함수 =====
+
+  // 녹음을 시작하는 함수
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      const chunks = [];
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+      mediaRecorder.onstop = () => {
+        const audio = new Blob(chunks, { type: "audio/webm" });
+        setAudioBlob(audio);
+        // 녹음이 종료되면 사용자가 별도 버튼을 눌러 STT 요청을 할 수 있습니다.
+      };
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error("마이크 접근 오류:", error);
+    }
+  };
+
+  // 녹음을 중지하는 함수
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  // 녹음된 오디오를 OpenAI Whisper API로 전송하는 함수
+  const sendAudioToOpenAI = async () => {
+    if (!audioBlob) {
+      alert("녹음된 음성이 없습니다.");
+      return;
+    }
+    setIsTranscribing(true);
+    setTranscription("");
+    const formData = new FormData();
+    formData.append("file", audioBlob, "audio.webm");
+    formData.append("model", "whisper-1");
+    formData.append("language", "ko");
+    try {
+      // OpenAI의 STT API 호출 (API 키는 안전하게 관리하세요)
+      const response = await axios.post(
+        "https://api.openai.com/v1/audio/transcriptions",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      const transcript = response.data.text;
+      setTranscription(transcript);
+      // 전사된 텍스트를 사용자 메시지로 추가하고, 챗봇 API로 전송
+      displayUserMessage(transcript);
+      const chatResponse = await fetch("http://127.0.0.1:8000/api/chat/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_input: transcript }),
+      });
+      if (chatResponse.ok) {
+        const chatData = await chatResponse.json();
+        displayBotMessage(chatData.message);
+      } else {
+        const localResponse = generateBotResponse(transcript);
+        displayBotMessage(localResponse);
+      }
+    } catch (error) {
+      console.error("STT API 오류:", error);
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  // =======================================================
 
   return (
     <div
@@ -255,6 +350,21 @@ const Chatbot = () => {
         </div>
         {isLoading && <ProgressBar />}
 
+        {/* 전사된 텍스트 영역 */}
+        {transcription && (
+          <div
+            style={{
+              marginTop: "20px",
+              padding: "10px",
+              border: "1px solid #ccc",
+              background: "#F9F9F9",
+            }}
+          >
+            <strong>Transcription:</strong>
+            <p>{transcription}</p>
+          </div>
+        )}
+
         {/* 입력창 영역 */}
         <div className="chat-input mt-3" style={{ width: "100%" }}>
           <div className="input-group" style={{ width: "100%" }}>
@@ -289,6 +399,39 @@ const Chatbot = () => {
             >
               <FontAwesomeIcon icon={faAngleRight} style={{ color: "white" }} />
             </button>
+            {/* 음성 녹음 버튼 */}
+            <button
+              className="ms-2 btn btn-link"
+              onClick={isRecording ? stopRecording : startRecording}
+              aria-label="Voice Recording"
+              style={{
+                fontSize: "1.5rem",
+                color: isRecording ? "red" : "#5e6aec",
+              }}
+            >
+              <FontAwesomeIcon
+                icon={isRecording ? faStopCircle : faMicrophone}
+              />
+            </button>
+            {/* 녹음된 음성이 있을 경우, STT 요청 버튼 표시 */}
+            {audioBlob && !isTranscribing && (
+              <button
+                className="ms-2 btn btn-link"
+                onClick={sendAudioToOpenAI}
+                aria-label="Send Audio"
+                style={{
+                  fontSize: "1.5rem",
+                  color: "#5e6aec",
+                }}
+              >
+                Send Audio
+              </button>
+            )}
+            {isTranscribing && (
+              <span className="ms-2" style={{ fontSize: "1rem" }}>
+                Transcribing...
+              </span>
+            )}
           </div>
         </div>
       </div>

@@ -8,7 +8,6 @@ state = {
     "user_input": "",
     "chat_history": [],
     "intent": None,
-    "previous_intent": None,
     "intent_search_job": None,
     "job_name": "",
     "selected_job": None,
@@ -18,25 +17,26 @@ state = {
     "intent_cover_letter": None,
     "cover_letter": None,
     "cover_letter_in": False,
+    "interview_q": [],
+    "interview_in": False,
+    "intent_interview": None
 }
 
 # JobAssistantBot 실행
 bot = JobAssistantBot()
 workflow = bot.create_workflow()
+bot.show_graph(workflow)
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def chatbot_api(request):
     try:
-        # 🛠️ 요청 데이터 확인 (로깅 추가)
-        print("📌 Raw Request Body:", request.body)  # JSON 데이터가 정상적으로 들어오는지 확인
 
         if not request.body:
             return JsonResponse({"error": "요청 데이터가 없습니다."}, status=400)
 
         try:
             data = json.loads(request.body)
-            print("📌 Parsed JSON Data:", data)  # JSON 변환된 데이터 확인
         except json.JSONDecodeError:
             return JsonResponse({"error": "올바른 JSON 형식이 아닙니다."}, status=400)
 
