@@ -177,6 +177,7 @@ def scrape_jobs():
         job_data = []
         job_elements = driver.find_elements(By.XPATH, "//section/div")
         print(f"총 {len(job_elements)}개의 공고를 찾았습니다.")
+        
 
         for job_element in job_elements:
             try:
@@ -210,7 +211,13 @@ def save_to_db(job_data):
     
     for job in job_data:
         title, company_name, skill, loc, condition, date, job_url = job
+        
+        # 'D-day'인 데이터 제외
+        if date.strip().lower() == 'd-day':
+            print(f"'{title}' 공고는 'D-day'이므로 제외됨.")
+            continue
 
+        # 상세 정보 크롤링
         details = scrape_job_details(job_url)
 
         insert_query = """
