@@ -1,35 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Header } from "./settings/Header";
 import { Sidebar } from "./settings/Sidebar";
-import { LoginPage } from "./settings/LoginPage";
-import { Profile } from "./settings/Profile";
 import { DataTable } from "./settings/DataTable";
+// Profile 컴포넌트는 로그인 정보를 표시하는 역할을 합니다.
+import { Profile } from "./settings/Login";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showLoginPage, setShowLoginPage] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
   const mainColor = "#5e6aec";
   const maxWidth = "1900px";
+  const navigate = useNavigate();
 
-  // 로그인 및 로그아웃 핸들러 추가
-  const handleLogin = () => setIsLoggedIn(true);
-  const handleLogout = () => setIsLoggedIn(false);
-  const handleSocialLogin = () => {
-    setIsLoggedIn(true);
-    setShowLoginPage(false);
+  // 컴포넌트 마운트 시 localStorage에서 로그인 상태 및 사용자 정보 확인
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+      const storedProfile = localStorage.getItem("userProfile");
+      if (storedProfile) {
+        setUserProfile(JSON.parse(storedProfile));
+      }
+    }
+  }, []);
+
+  // 로그인 및 로그아웃 핸들러
+  const handleLogin = () => navigate("/login"); // 로그인 페이지로 이동
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userProfile");
+    setIsLoggedIn(false);
+    setUserProfile(null);
   };
 
-  const userProfile = {
-    name: "박아롱",
-    email: "arong@example.com",
-    phone: "010-1234-5678",
-    position: "프론트엔드 개발자",
-    career: "신입",
-  };
-
+  // 예시용 데이터 (로그인 전에는 하드코딩된 정보)
   const resumes = [
     { id: 1, title: "네이버 자기소개서", date: "2024-02-06" },
     { id: 2, title: "카카오 자기소개서", date: "2024-02-05" },
@@ -51,27 +59,17 @@ const Settings = () => {
   ];
 
   const renderContent = () => {
-    if (showLoginPage) {
-      return (
-        <LoginPage
-          handleSocialLogin={handleSocialLogin}
-          mainColor={mainColor}
-        />
-      );
-    }
-
     switch (activeTab) {
       case "profile":
         return (
           <Profile
             isLoggedIn={isLoggedIn}
-            userProfile={userProfile}
-            handleLogout={handleLogout}
+            userProfile={isLoggedIn ? userProfile : null}
             handleLogin={handleLogin}
+            handleLogout={handleLogout}
             mainColor={mainColor}
           />
         );
-
       case "resumes":
         return (
           <div className="bg-white p-4 rounded-3 shadow-sm">
@@ -92,7 +90,6 @@ const Settings = () => {
             />
           </div>
         );
-
       case "interviews":
         return (
           <div className="bg-white p-4 rounded-3 shadow-sm">
@@ -108,7 +105,6 @@ const Settings = () => {
             />
           </div>
         );
-
       case "jobs":
         return (
           <div className="bg-white p-4 rounded-3 shadow-sm">
@@ -124,7 +120,6 @@ const Settings = () => {
             />
           </div>
         );
-
       default:
         return null;
     }

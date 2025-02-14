@@ -96,15 +96,15 @@ def preprocess_job_details(details):
         "근무지역_상세": ["지도보기·주소복사"],
     }
     
-
     for key, words in remove_words_map.items():
         if key in details and details[key] != "정보 없음":
             for word in words:
                 details[key] = details[key].replace(word, "").strip()
 
-    # 채용절차가 "-"처럼 한 글자만 있으면 "정보 없음" 처리
-    if "채용절차" in details and len(details["채용절차"]) == 1:
-        details["채용절차"] = "정보 없음"
+    # 모든 컬럼에서 빈 값, 공백 문자열, 길이가 1 이하면 "정보 없음" 처리
+    for key in details:
+        if not details[key].strip() or len(details[key]) <= 1:
+            details[key] = "정보 없음"
 
     return details
 
@@ -208,6 +208,7 @@ def scrape_jobs():
 def save_to_db(job_data):
     """DB에 크롤링한 데이터 저장"""
     cursor = db.cursor()
+    saved_job_count = 0
     
     for job in job_data:
         title, company_name, skill, loc, condition, date, job_url = job
@@ -227,12 +228,13 @@ def save_to_db(job_data):
         try:
             cursor.execute(insert_query, (title, company_name, skill, loc, condition, date, job_url, *details.values()))
             db.commit()
+            saved_job_count += 1  # 저장된 공고 카운트 증가
         except Exception as e:
             print(f"DB 저장 중 오류 발생: {e}")
             db.rollback()
     
     cursor.close()
-    print("DB 저장 완료!")
+    print(f"총 {saved_job_count}개의 공고 DB 저장 완료!")
 
 def main():
     print("채용 정보를 크롤링하는 중...")
