@@ -2,25 +2,9 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const InterviewPrep = () => {
+const CustomerSupport = () => {
   const navigate = useNavigate();
   const mainColor = "#5e6aec";
-
-  const commonQuestions = [
-    {
-      question: "자신의 장단점은 무엇인가요?",
-      tip: "장점은 구체적인 사례와 함께 설명하고, 단점은 극복 노력을 함께 언급하세요.",
-    },
-    {
-      question: "우리 회사에 지원한 이유는 무엇인가요?",
-      tip: "회사의 비전, 문화, 제품/서비스에 대한 구체적인 리서치를 바탕으로 답변하세요.",
-    },
-    {
-      question: "스트레스 상황을 어떻게 극복하시나요?",
-      tip: "실제 경험을 바탕으로 문제 해결 과정과 결과를 구체적으로 설명하세요.",
-    },
-  ];
-
   return (
     <div
       className="d-flex flex-column min-vh-100"
@@ -28,7 +12,7 @@ const InterviewPrep = () => {
     >
       {/* Header */}
       <header
-        className="d-flex justify-content-between align-items-center px-3 px-md-5 py-3 container-fluid"
+        className="d-flex justify-content-between align-items-center px-4 py-3 w-100"
         style={{ backgroundColor: mainColor }}
       >
         <img
@@ -44,95 +28,60 @@ const InterviewPrep = () => {
           홈으로
         </button>
       </header>
+      <h3 className="text-center mb-4">고객 지원</h3>
+      <p className="lead text-center">
+        도움이 필요하시면 지원 팀에 연락해 주세요.
+      </p>
 
-      {/* Main Content */}
-      <main className="flex-grow-1 container-fluid px-3 px-md-5 py-5">
-        <h3 className="text-center fw-bold mb-4" style={{ color: mainColor }}>
-          면접 준비 가이드
-        </h3>
+      <div className="row">
+        <div className="col-md-6">
+          <h3>연락처</h3>
+          <ul className="list-unstyled">
+            <li>
+              <strong>이메일:</strong> support@jobara.com
+            </li>
+            <li>
+              <strong>전화:</strong> +1 234 567 890
+            </li>
+          </ul>
+        </div>
 
-        <div className="row g-4 mb-4">
-          <div className="col-md-6">
-            <div className="card shadow-sm p-3 border-0 rounded-4">
-              <div className="card-body">
-                <h3 className="fs-5 fw-bold mb-3" style={{ color: mainColor }}>
-                  면접 준비 체크리스트
-                </h3>
-                <ul className="list-unstyled text-muted">
-                  <li>✓ 회사 정보 및 최근 뉴스 숙지</li>
-                  <li>✓ 직무 관련 전문 지식 복습</li>
-                  <li>✓ 예상 질문 답변 준비</li>
-                  <li>✓ 복장 및 준비물 체크</li>
-                </ul>
-              </div>
-            </div>
+        <div className="col-md-6">
+          <h3>자주 묻는 질문 (FAQ)</h3>
+          <ul className="list-group">
+            <li className="list-group-item">비밀번호를 어떻게 재설정하나요?</li>
+            <li className="list-group-item">프로필을 어떻게 업데이트하나요?</li>
+            <li className="list-group-item">
+              내 과거 지원서를 어디에서 확인할 수 있나요?
+            </li>
+          </ul>
+        </div>
+
+        {/* Footer */}
+        <footer className="bg-light py-4 w-100">
+          <div className="container d-flex justify-content-center gap-3">
+            <button
+              onClick={() => navigate("/customer-support")}
+              className="btn btn-link text-secondary"
+            >
+              고객센터
+            </button>
+            <button
+              onClick={() => navigate("/terms")}
+              className="btn btn-link text-secondary"
+            >
+              이용약관
+            </button>
           </div>
-          <div className="col-md-6">
-            <div className="card shadow-sm p-3 border-0 rounded-4">
-              <div className="card-body">
-                <h3 className="fs-5 fw-bold mb-3" style={{ color: mainColor }}>
-                  면접 당일 유의사항
-                </h3>
-                <ul className="list-unstyled text-muted">
-                  <li>✓ 시간 여유 있게 도착 (30분 전)</li>
-                  <li>✓ 바른 자세와 밝은 표정 유지</li>
-                  <li>✓ 경청하고 명확하게 답변</li>
-                  <li>✓ 예의 바른 태도로 임하기</li>
-                </ul>
-              </div>
-            </div>
+          <div className="text-center mt-3">
+            <p className="text-muted" style={{ fontSize: "12px" }}>
+              © 2024 jobara Company. All rights reserved.
+            </p>
           </div>
-        </div>
-
-        <div className="p-4 bg-light rounded-4">
-          <h3 className="fw-bold mb-3 px-3">자주 나오는 질문과 답변 팁</h3>
-          <div className="row g-3">
-            {commonQuestions.map((item, index) => (
-              <div key={index} className="col-md-4 px-3">
-                <div className="p-3 bg-white rounded-4 shadow-sm">
-                  <h3 className="fs-6 fw-bold mb-3 px-2 py-2">
-                    Q. {item.question}
-                  </h3>
-                  <p className="text-muted px-2">💡 {item.tip}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer
-        className="bg-light py-4 container-fluid px-0"
-        style={{ width: "100vw", maxWidth: "none" }}
-      >
-        <div
-          className="container d-flex justify-content-center gap-3"
-          style={{ maxWidth: "1200px" }}
-        >
-          <button
-            onClick={() => navigate("/customer-support")}
-            className="btn btn-link text-secondary"
-            style={{ fontSize: "12px", lineHeight: "1.1" }}
-          >
-            고객센터
-          </button>
-          <button
-            onClick={() => navigate("/terms")}
-            className="btn btn-link text-secondary"
-            style={{ fontSize: "12px", lineHeight: "1.1" }}
-          >
-            이용약관
-          </button>
-        </div>
-        <div className="text-center mt-3">
-          <p className="text-muted" style={{ fontSize: "12px" }}>
-            © 2024 jobara Company. All rights reserved.
-          </p>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 };
 
-export default InterviewPrep;
+export default CustomerSupport;
