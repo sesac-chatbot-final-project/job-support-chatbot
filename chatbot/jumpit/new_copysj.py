@@ -626,7 +626,7 @@ class JobAssistantBot:
                             f"근무지: {job[3]}\n"
                             f"조건: {job[4]}\n"
                             f"모집기간: {job[5]}\n"
-                            f"[지원 링크] ({job[6]})\n\n"
+                            f"[지원 링크] {job[6]}\n\n"
                         )
                     response += (
                         "✅ 더 많은 공고를 보시려면 '더 보여줘'라고 입력해주세요.\n"
@@ -660,7 +660,7 @@ class JobAssistantBot:
                     f"근무지: {job[3]}\n"
                     f"조건: {job[4]}\n"
                     f"모집기간: {job[5]}\n"
-                    f"[지원 링크] ({job[6]})\n\n"
+                    f"[지원 링크] {job[6]}\n\n"
                 )
 
             if end_index < len(job_list):

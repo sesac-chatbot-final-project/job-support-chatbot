@@ -10,7 +10,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 from django.conf import settings
 
-from .new_copysj import JobAssistantBot
+from .hs import JobAssistantBot
 
 JWT_SECRET = settings.JWT_SECRET
 JWT_EXP_DELTA_SECONDS = settings.JWT_EXP_DELTA_SECONDS
@@ -32,6 +32,7 @@ state = {
     "intent_cover_letter": None,
     "cover_letter": None,
     "cover_letter_in": False,
+    "cover_letter_now": False,
     "interview_q": [],
     "interview_in": False,
     "intent_interview": None,

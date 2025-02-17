@@ -33,6 +33,11 @@ class State(TypedDict):
     intent_cover_letter: Optional[str]  # 자기소개서 기능에서의 분기
     cover_letter: Optional[str]  # 작성한 자기소개서
     cover_letter_in: bool  # 자기소개서 DB 저장(작성) 여부
+    cover_letter_now: bool  # 자기소개서 루트로 들어왔는지
+    cover_letter_state: Optional[str]  # 자기소개서 state
+    cl_jobname: Optional[str]  # 자기소개서 쓴 채용공고 이름
+    hallucination_intent: Optional[str]  # 환각 여부 확인 후 intent
+    hallucination_details: Optional[str]  # 환각 디테일
     interview_q: Optional[List[str]]  # 이전 면접 질문 리스트
     interview_in: bool  # 면접 질문 DB 저장 여부
     intent_interview: Optional[str]  # 면접 기능에서의 분기
@@ -54,7 +59,8 @@ class JobAssistantBot:
 
             self.llm = ChatOpenAI(
                 model="gpt-4o",
-                streaming=True
+                streaming=True,
+                temperature=0
             )
             print("OpenAI API 초기화 성공")
 
@@ -73,7 +79,7 @@ class JobAssistantBot:
     def _initialize_prompts(self):
         self.intent_template = PromptTemplate.from_template(
             """
-            사용자 입력을 분석하여 다음 중 하나로 분류하여 결과로 출력하세요:
+            사용자 입력을 분석하여 다음 중 하나로 분류하여 결과로 출력하세요.
             - JOB_SEARCH
               : 직무를 입력하며 채용 공고를 탐색
               : 공고 번호를 입력하며 상세 정보를 요청
@@ -84,8 +90,12 @@ class JobAssistantBot:
               : 사용자가 본인의 경험 혹은 직무 등을 입력
               : 자기소개서 수정을 요청
             - INTERVIEW
-              : 면접을 요청
               : 면접 연습을 요청
+              : 사용자가 본인의 자기소개서를 입력하는 경우
+              : 사용자가 본인의 자기소개서를 입력하고 면접 연습을 요청하는 경우
+            - JOBNAME
+              : 직무 이름만을 입력한 경우
+              : 예: AI 개발자, 데이터 엔지니어 등
             - UNKNOWN
               : 서비스와 상관없는 내용 입력
 
@@ -100,9 +110,10 @@ class JobAssistantBot:
 
             사용자 입력: {user_input}
             결과:""")
+        
         self.search_job_prompt = PromptTemplate.from_template(
             """
-            사용자의 입력을 분석하여 사용자의 의도를 판단하여 결과로 출력하세요:
+            사용자의 입력을 분석하여 사용자의 의도를 판단하여 결과로 출력하세요.
             - 채용 공고 제공
                 : 사용자가 특정 직무에 대한 채용 공고를 요청하는 경우
             - 채용 공고 추가 제공
@@ -133,11 +144,11 @@ class JobAssistantBot:
             예시 출력: 관련 없음, -1
 
             사용자 입력: {user_input}
-            결과:"""
-        )
+            결과:""")
+
         self.jobname_prompt = PromptTemplate.from_template(
             """
-            사용자의 입력을 분석하여 직무 관련 키워드가 포함되어 있는지 판단하세요:
+            사용자의 입력을 분석하여 직무 관련 키워드가 포함되어 있는지 판단하세요.
             - include
               : '백엔드', '프론트엔드', '개발자', '프로그래머', 'AI', '인공지능', '데이터' 등 
                 직무나 기술 스택 관련 키워드가 포함된 경우
@@ -152,6 +163,7 @@ class JobAssistantBot:
 
             사용자 입력: {user_input}
             결과:""")
+        
         self.jobname_extract_prompt = PromptTemplate.from_template(
             """
             사용자의 입력에서 직무, 직업, 개발과 관련된 모든 키워드를 추출해주세요. 
@@ -167,6 +179,7 @@ class JobAssistantBot:
 
             사용자 입력: {user_input}
             결과: """)
+        
         self.moreinfo_extract_prompt = PromptTemplate.from_template(
             """
             사용자의 입력에서 어떤 상세 정보를 원하는지 추출해주세요.
@@ -198,17 +211,20 @@ class JobAssistantBot:
             
             사용자 입력: {user_input}
             결과:""")
+        
         self.natural_response = PromptTemplate.from_template(
             """
             사용자에게 채용 공고의 상세 정보를 아래 형식대로 자연스럽게 전달해주세요.
             상세 정보: {extracted_info}
             형식: [상세 정보 제목] \n 상세 정보 내용
             결과: """)
+        
         self.cover_letter_prompt = PromptTemplate.from_template(
             """
             사용자의 입력을 분석하여 사용자의 의도를 판단하여 결과로 출력하세요:
             - 자기소개서 작성
               : 사용자가 자기소개서 작성을 요청하는 경우
+              : 사용자가 직무를 입력하는 경우 (예: AI 개발자, 데이터 분석가 등)
               : 사용자가 자신의 경험, 프로젝트, 기술 스택, 직무와 관련된 내용을 입력하는 경우
               : 사용자가 특정 경험을 입력한 경우
               : 숫자 혹은 번호를 입력한 경우 (예: 5번)
@@ -254,6 +270,7 @@ class JobAssistantBot:
 
             사용자 입력: {user_input}
             결과:""")
+        
         self.experience_prompt = PromptTemplate.from_template(
             """
             사용자의 입력을 분석하여 경험이 포함되어 있는지 판단하세요:
@@ -265,9 +282,10 @@ class JobAssistantBot:
             
             사용자 입력: {user_input}
             결과:""")
+        
         self.experience_prompt_without_job = PromptTemplate.from_template(
             """
-            사용자의 입력을 분석하여 직무와 경험이 포함되어 있는지 판단하세요:
+            사용자의 입력을 분석하여 직무와 경험이 포함되어 있는지 판단하고 각 분류 이름을 출력하세요:
             - job_include
               : 직무가 포함되어 있는 경우
             - experience_include
@@ -276,9 +294,13 @@ class JobAssistantBot:
               : 직무와 경험 모두 포함된 경우
             - not_include
               : 둘 다 포함되지 않은 경우
+            
+            예시 입력: AI 개발자
+            예시 출력: job_include
 
             사용자 입력: {user_input}
             결과:""")
+        
         self.cover_letter_write = PromptTemplate.from_template(
             """
             [채용 공고 정보]
@@ -297,12 +319,13 @@ class JobAssistantBot:
             3. 직무 역량
             4. 입사 후 포부
 
-            사용자의 경험을 기반으로 자기소개서를 작성하세요.
-            사용자의 경험과 채용 공고 정보를 비교해서, 사용자의 경험과 강점 중에 채용 공고의 우대사항이나 자격요건과 맞는 부분을 찾아 강조하세요.
-            사용자의 경험이 해당 공고의 직무에 어떻게 도움이 될지 설명할 수 있도록 작성해주세요.
-            각 항목을 아래 형식에 맞춰 작성해주세요 (항목 별 700자 내외, 총 3000자 내외).
-            형식: [제목] \n 내용
+            - 각 항목 별로 최소 300자 이상씩 작성하세요.
+            - 각 항목의 실제 글자 수를 정확하게 계산하여 출력하세요.  
+
+            형식 예시: [제목] \n 내용
+
             결과:""")
+
         self.cover_letter_write_without_job = PromptTemplate.from_template(
             """
             [사용자 경험 및 직무]
@@ -314,11 +337,13 @@ class JobAssistantBot:
             3. 직무 역량
             4. 입사 후 포부
 
-            사용자의 경험을 기반으로 자기소개서를 작성하세요.
-            사용자의 경험이 입력한 직무에 어떻게 도움이 될지 설명할 수 있도록 작성해주세요.
-            각 항목을 구체적으로 아래 형식에 맞춰 작성해주세요 (항목 별 700자 내외, 총 3000자 내외).
-            형식: [제목] \n 내용
+            - 각 항목 별로 최소 300자 이상씩 작성하세요.
+            - 각 항목의 실제 글자 수를 정확하게 계산하여 출력하세요.  
+
+            형식 예시: [제목] \n 내용
+
             결과:""")
+
         self.cover_letter_refine = PromptTemplate.from_template(
             """
             [기존 자기소개서 내용]
@@ -332,25 +357,97 @@ class JobAssistantBot:
             그 외의 항목들은 기존 자기소개서 내용과 동일하게 출력하세요.
 
             자기소개서 출력 결과는 항상 지원 동기, 성격의 장단점, 직무 역량, 입사 후 포부를 포함해야 합니다.
-            아래 형식에 맞춰 수정된 자기소개서를 출력하세요.
-            형식: [제목] \n 내용
+            - 각 항목 별로 최소 300자 이상씩 작성하세요.
+
+            형식 예시: [제목] \n 내용
+
             결과:""")
+
+        self.cover_letter_hallucination = PromptTemplate.from_template(
+            """
+            사용자 입력으로 들어온 경험과 LLM이 작성해준 자기소개서를 대조하여,
+            사용자가 입력하지 않은 내용 (예: 없는 자격증을 있다고 함) 이 포함되어 있는지 확인하세요.
+            사용자가 입력한 내용에서 구체적인 내용을 생성해서 적는 것은 괜찮지만,
+            아예 입력하지 않은 내용이 추가되어 있는 경우를 찾아야 합니다.
+
+            입력하지 않은 내용이 포함되어 있다면 "환각", 포함되어 있지 않다면 "통과" 를 출력하세요.
+            결과가 "환각"이라면 어떤 부분이 환각인지도 쉼표로 구분하여 문자열로 함께 포함해서 출력해주세요.
+            결과가 "통과"라면 "환각 부분 없음" 을 쉼표로 구분하여 문자열로 함께 출력해주세요.
+
+            예시 출력: 통과, 환각 부분 없음
+            
+            예시 출력: 환각, 이미지 처리 프로젝트를 수행했다는 부분은 환각입니다
+
+            사용자 입력: {user_input}
+            작성된 자기소개서: {cover_letter}
+            결과:""")
+        
+        self.cover_letter_write_no_hallucination = PromptTemplate.from_template(
+            """
+            다음 자기소개서에서 환각이 발견되었습니다. 
+            해당 부분들을 제거하고, 실제 경험만을 바탕으로 자기소개서를 재작성해주세요.
+
+            채용공고 정보:
+            {job_info}
+
+            이전 자기소개서:
+            {previous_letter}
+
+            환각이 발견된 부분:
+            {hallucination_details}
+
+            사용자 입력:
+            {user_input}
+
+            다음 사항을 준수하여 재작성해주세요:
+            1. 위에서 지적된 환각 부분을 완전히 제거하거나 실제 경험으로 대체
+            2. 나머지 부분은 최대한 원래 내용을 유지
+            3. 모든 내용은 반드시 실제 경험에 기반
+            4. 채용공고의 요구사항과 연관성 유지
+            """)
+
         self.interview_intent = PromptTemplate.from_template(
             """
             사용자의 입력을 분석하여 다음 중 하나를 출력하세요:
-            - 인성 면접 (사용자 입력에 '인성' 포함)
-            - 기술 면접 (사용자 입력에 '기술' 포함)
-            - 종료 (사용자 입력이 면접 종료를 원하는 경우 → ex. 종료할게, 그만할게 등)
+            - 인성 면접
+              : 사용자 입력이 인성 면접 연습을 원하는 경우
+              : 사용자 입력에 '인성 면접' 이 포함되는 경우
+            - 기술 면접
+              : 사용자 입력이 기술 면접 연습을 원하는 경우
+              : 사용자 입력에 '기술 면접' 이 포함되는 경우
+              : 사용자 입력에 자기소개서가 포함되어 있는 경우
+              : 사용자 입력에 자기소개서가 포함되어 있고, 면접 연습을 요구하는 경우
+            - 종료
+              : 사용자 입력이 면접 종료를 원하는 경우
+              : 사용자 입력이 종료할게, 그만할게 등 면접 연습 종료를 희망
+            - 단순 면접
+              : 사용자 입력이 면접 연습, 모의 면접 등을 희망하지만 인성 면접과 기술 면접은 언급하지 않은 경우
+              : 사용자 입력에서 단순히 면접 연습만을 요구하는 경우
             - 관련 없음
+
+            예시 입력: "기술 면접 하고싶어"
+            예시 출력: 기술 면접
+
+            예시 입력: "이 자기소개서로 면접 연습하고 싶어"
+            예시 출력: 기술 면접
 
             사용자 입력: {user_input}
             결과:""")
+        
+        self.interview_cover_letter = PromptTemplate.from_template(
+            """
+            주어진 사용자 입력에서 자기소개서를 찾아 출력하세요.
+            사용자 입력에 자기소개서로 판단할 만한 내용이 없으면 반드시 "없음"만 출력하세요.
+            사용자 입력: {user_input}
+            결과:""")
+        
         self.interview_tenacity = PromptTemplate.from_template(
             """
             당신은 인성 면접관입니다. 다음 가이드라인에 따라 면접을 진행하세요:
             1. 답변 분석: 사용자의 이전 답변을 분석합니다.
             2. 후속 질문 생성: 답변과 자연스럽게 연결되는 질문을 생성합니다.
             3. 한 번의 채팅에 한 개의 질문만을 출력합니다.
+            4. 사용자가 입력하지 않은 경험 관련 내용으로는 질문을 생성하지 마세요. (예: 프로젝트 경험 등)
 
             예시 입력: "프로젝트 리더 경험이 있습니다."
             예시 출력: "프로젝트 리더 경험이 인상적이네요. 그렇다면 팀 내 갈등은 어떻게 해결하셨나요?"
@@ -358,12 +455,14 @@ class JobAssistantBot:
             사용자 입력: {user_input}
             DB 내역: {interview_history}
             결과:""")
+        
         self.interview_technology = PromptTemplate.from_template(
             """
             당신은 기술 면접관입니다. 다음 가이드라인에 따라 면접을 진행하세요:
             1. 답변 분석: 사용자의 이전 답변과 자기소개서를 분석하여 기술적인 질문을 생성합니다.
             2. 후속 질문 생성: 답변과 자연스럽게 연결되는 질문을 생성합니다.
             3. 한 번의 채팅에 한 개의 질문만을 출력합니다.
+            4. 사용자의 자기소개서나 채용 공고에 없는 내용으로는 질문을 생성하지 마세요.
 
             예시 입력: "저는 async/await를 사용합니다."
             예시 출력: "async/await에 대해 잘 알고 계시군요. 그렇다면 Promise와의 차이점은 무엇이라고 생각하시나요?"
@@ -465,6 +564,9 @@ class JobAssistantBot:
         print('user_id:', state['user_id'])
         if state["interview_in"] and state["intent_interview"]:
             intent = "INTERVIEW"
+        if state["cover_letter_now"] and intent == "JOBNAME":
+            intent = "COVER_LETTER"
+            state["cover_letter_now"] = False
         if intent not in ["JOB_SEARCH", "COVER_LETTER", "INTERVIEW", "UNKNOWN"]:
             intent = "UNKNOWN"
         print(f"Classified intent: {intent}")
@@ -521,7 +623,7 @@ class JobAssistantBot:
         """작성한 가장 최근 자기소개서 검색"""
         cursor = self.db.cursor()
         query = """
-        SELECT 자기소개서
+        SELECT 채용공고, 자기소개서
         FROM saved_cover_letter
         WHERE customer_id = %s
         ORDER BY 저장일시 DESC
@@ -531,8 +633,8 @@ class JobAssistantBot:
         result = cursor.fetchone()
         cursor.close()
         if result:
-            return {**state, "cover_letter": result[0]}
-        return {**state, "cover_letter": None}
+            return {**state, "cover_letter": result[1], "cl_jobname": result[0]}
+        return {**state, "cover_letter": None, "cl_jobname": None}
     
     def search_interview_question(self, state: State) -> State:
         """지금까지 진행했던 면접 질문 검색"""
@@ -626,7 +728,7 @@ class JobAssistantBot:
                             f"근무지: {job[3]}\n"
                             f"조건: {job[4]}\n"
                             f"모집기간: {job[5]}\n"
-                            f"[지원 링크] ({job[6]})\n\n"
+                            f"[지원 링크] {job[6]}\n\n"
                         )
                     response += (
                         "✅ 더 많은 공고를 보시려면 '더 보여줘'라고 입력해주세요.\n"
@@ -660,7 +762,7 @@ class JobAssistantBot:
                     f"근무지: {job[3]}\n"
                     f"조건: {job[4]}\n"
                     f"모집기간: {job[5]}\n"
-                    f"[지원 링크] ({job[6]})\n\n"
+                    f"[지원 링크] {job[6]}\n\n"
                 )
 
             if end_index < len(job_list):
@@ -713,6 +815,69 @@ class JobAssistantBot:
     
     def cover_letter_chat(self, state: State) -> State:
         """자기소개서 작성 기능"""
+        if state.get('hallucination_intent') == 'rewrite':
+            if state["job_search"] and state.get('selected_job'):
+                # 채용공고 기반 자기소개서 재작성
+                job_info = self.search_select_job(state)
+                if not job_info:
+                    return {**state, "response": "선택한 공고를 찾을 수 없습니다."}
+                
+                cover_letter_writing = str(self.llm.invoke(
+                    self.cover_letter_write_no_hallucination.format(
+                        **job_info, 
+                        user_input=state["user_input"],
+                        previous_letter=state["cover_letter"],
+                        hallucination_details=state["hallucination_details"]
+                    )
+                ).content).strip()
+                
+                self.create_saved_cover_letter_table()
+                self.save_cover_letter_to_table(state['user_id'], job_info['job_name'], cover_letter_writing)
+                
+                response = (
+                    f"🔍 다음과 같은 부분에서 환각 현상이 발생하여 수정했습니다:\n"
+                    f"{state['hallucination_details']}\n\n"
+                    f"수정된 자기소개서:\n{cover_letter_writing}\n\n"
+                    "🔮 추가 수정을 원하시면 수정 요청 사항을 입력해주세요.\n"
+                    "❗ 출력된 자기소개서 내용에 실제 사실과 다른 내용이 입력되었을 수 있으니 확인 바랍니다."
+                )
+                return {**state, "response": response, "cover_letter": cover_letter_writing, "cover_letter_in": True}
+                
+            else:
+                # 일반 자기소개서 재작성
+                cover_letter_writing = str(self.llm.invoke(
+                    self.cover_letter_write_without_job_no_hallucination.format(
+                        user_input=state["user_input"],
+                        previous_letter=state["cover_letter"],
+                        hallucination_details=state["hallucination_details"]
+                    )
+                ).content).strip()
+                
+                self.create_saved_cover_letter_table()
+                self.save_cover_letter_to_table(state['user_id'], 'just_cl', cover_letter_writing)
+                
+                response = (
+                    f"🔍 다음과 같은 부분에서 환각 현상이 발생하여 수정했습니다:\n"
+                    f"{state['hallucination_details']}\n\n"
+                    f"수정된 자기소개서:\n{cover_letter_writing}\n\n"
+                    "🔮 추가 수정을 원하시면 수정 요청 사항을 입력해주세요.\n"
+                    "❗ 출력된 자기소개서 내용에 실제 사실과 다른 내용이 입력되었을 수 있으니 확인 바랍니다."
+                )
+                return {**state, "response": response, "cover_letter": cover_letter_writing, "cover_letter_in": True}
+
+        # 기존 자기소개서 작성 로직
+        try:
+            cl_road, num = str(self.llm.invoke(self.cover_letter_prompt.format(user_input=state["user_input"])).content).split(',')
+            cl_road = cl_road.strip()
+            num = int(num.strip())
+        except Exception as e:
+            print(f'에러 발생: {e}')
+            
+        print("자기소개서 분기", cl_road, num)
+        response = ""
+        if num and num > 0:
+            state['selected_job'] = num
+
         try:
             cl_road, num = str(self.llm.invoke(self.cover_letter_prompt.format(user_input=state["user_input"])).content).split(',')
             cl_road = cl_road.strip()
@@ -744,11 +909,11 @@ class JobAssistantBot:
                             "\n\n🔮 추가 수정을 원하시면 수정 요청 사항을 입력해주세요.\n"
                             "❗ 출력된 자기소개서 내용에 실제 사실과 다른 내용이 입력되었을 수 있으니 확인 바랍니다."
                         )
-                        return {**state, "response": response, "cover_letter": cover_letter_writing, "cover_letter_in": True, "selected_job": num}
+                        return {**state, "response": response, "cover_letter": cover_letter_writing, "cover_letter_in": True, "selected_job": num, "cover_letter_state": "COMPLETED"}
                     else:
-                        return {**state, "response": "자기소개서 작성을 위해 경험을 입력해주세요.", "selected_job": num}
+                        return {**state, "response": "자기소개서 작성을 위해 경험을 입력해주세요.", "selected_job": num, "cover_letter_state": "NEED_EXPERIENCE"}
                 else:
-                    return {**state, "response": "자기소개서 작성에 참고할 공고 번호를 입력해주세요.", "experience": state['user_input']}
+                    return {**state, "response": "자기소개서 작성에 참고할 공고 번호를 입력해주세요.", "experience": state['user_input'], "cover_letter_state": "NEED_NUMBER"}
             else:
                 print('채용 공고 검색하지 않음')
                 job_exp = str(self.llm.invoke(self.experience_prompt_without_job.format(user_input=state["user_input"])).content).strip()
@@ -761,52 +926,80 @@ class JobAssistantBot:
                         "\n\n🔮 추가 수정을 원하시면 수정 요청 사항을 입력해주세요."
                         "❗ 출력된 자기소개서 내용에 실제 사실과 다른 내용이 입력되었을 수 있으니 확인 바랍니다."
                     )
-                    return {**state, "response": cover_letter_writing, "cover_letter": cover_letter_writing, "cover_letter_in": True}
+                    return {**state, "response": cover_letter_writing, "cover_letter": cover_letter_writing, "cover_letter_in": True, "cover_letter_state": "COMPLETED"}
                 elif job_exp == 'experience_include':
-                    return {**state, "response": "자기소개서에 반영할 직무를 입력해주세요.", "experience": state['user_input']}
+                    return {**state, "response": "자기소개서에 반영할 직무를 입력해주세요.", "experience": state['user_input'], "cover_letter_state": "NEED_JOB"}
                 elif job_exp == 'job_include':
-                    return {**state, "response": "자기소개서에 반영할 경험을 입력해주세요.", "job_name": state['user_input']}
+                    return {**state, "response": "자기소개서에 반영할 경험을 입력해주세요.", "job_name": state['user_input'], "cover_letter_state": "NEED_EXPERIENCE"}
                 elif job_exp == 'not_include':
-                    return {**state, "response": "자기소개서에 반영할 직무와 경험을 입력해주세요."}
+                    return {**state, "response": "자기소개서에 반영할 직무와 경험을 입력해주세요.", "cover_letter_state": "NEED_JOB_AND_EXPERIENCE"}
                 
         elif cl_road == "자기소개서 수정":
             if not state["cover_letter_in"]:
                 return {**state, "response": "작성된 자기소개서가 없습니다. 먼저 작성해주세요."}
+            state = self.search_cover_letter(state)
             refine_cover_letter = str(self.llm.invoke(
                 self.cover_letter_refine.format(
                     user_input=state["user_input"],
                     previous_response=state["cover_letter"]
                 )
             ).content).strip()
-            self.save_cover_letter_to_table(state['user_id'], refine_cover_letter)
+            self.save_cover_letter_to_table(state['user_id'], state['cl_jobname'], refine_cover_letter)
             response += refine_cover_letter
             response += (
                 "\n\n🔮 추가 수정을 원하시면 수정 요청 사항을 입력해주세요."
                 "❗ 출력된 자기소개서 내용에 실제 사실과 다른 내용이 입력되었을 수 있으니 확인 바랍니다."
             )
-            return {**state, "response": refine_cover_letter, "cover_letter": refine_cover_letter}
+            return {**state, "response": refine_cover_letter, "cover_letter": refine_cover_letter, "cover_letter_state": "COMPLETED"}
         elif cl_road == "관련 없음":
             return {**state, "intent_cover_letter": "UNKNOWN"}
     
+    def hallucination_check(self, state: State) -> State:
+        """자기소개서의 환각 현상을 확인하고 구체적인 환각 부분을 식별하는 함수"""
+        halcheck, detail = str(self.llm.invoke(self.cover_letter_hallucination.format(
+            user_input=state['user_input'],
+            cover_letter=state['cover_letter']
+        )).content).split(',')
+
+        if "환각" in halcheck.strip():
+            print('환각 현상 발생')
+            state['hallucination_intent'] = 'rewrite'
+            state['hallucination_details'] = detail
+            return state
+        else:
+            print('환각 현상 없음')
+            state['hallucination_intent'] = 'ok'
+            state['hallucination_details'] = None
+            return state
+
     def interview_chat(self, state: State) -> State:
         """모의 면접 기능"""
         try:
             self.create_saved_interview_question_table()
             current_intent = state.get('intent_interview')
-            if current_intent in ['TENACITY', 'TECHNOLOGY']:
-                if "종료" in state["user_input"].lower():
-                    return {**state, "response": "면접 연습을 종료합니다.", "intent_interview": "END", "interview_in": False}
-                return {**state, "intent_interview": current_intent, "interview_in": True}
             interview_road = str(self.llm.invoke(
                 self.interview_intent.format(user_input=state["user_input"])
             ).content).strip()
+            if current_intent in ['INTERVIEW', 'TENACITY', 'TECHNOLOGY']:
+                if interview_road == "종료":
+                    return {**state, "response": "면접 연습을 종료합니다.", "intent_interview": "END", "interview_in": False}
+            if current_intent in ['TENACITY', 'TECHNOLOGY']:
+                return {**state, "intent_interview": current_intent, "interview_in": True}
             print("면접 분기: ", interview_road)
             if interview_road == '인성 면접':
                 return {**state, "intent_interview": "TENACITY", "interview_in": True}
             elif interview_road == '기술 면접':
                 if not state.get('cover_letter_in'):
-                    return {**state, "response": "기술 면접을 위해서는 먼저 자기소개서가 필요합니다.", "intent_interview": "END"}
+                    self_cl = str(self.llm.invoke(self.interview_cover_letter.format(user_input=state["user_input"])).content).strip()
+                    print(self_cl)
+                    if self_cl == "없음":
+                        return {**state, "response": "기술 면접을 위해서는 먼저 자기소개서가 필요합니다.", "intent_interview": "END"}
+                    else:
+                        self.save_cover_letter_to_table(state['user_id'], 'self cover letter', self_cl)
+                        state["cover_letter_in"] = True
                 return {**state, "intent_interview": "TECHNOLOGY", "interview_in": True}
+            elif interview_road == '단순 면접':
+                return {**state, "response": "인성 면접과 기술 면접 중 선택해주세요.", "intent_interview": "END"}
             elif interview_road == '종료':
                 return {**state, "response": "면접 연습을 종료합니다.", "intent_interview": "END"}
             else:
@@ -842,7 +1035,7 @@ class JobAssistantBot:
                 search_result = self.search_interview_question(state)
                 print("면접 질문 검색 완료")
             if state['cover_letter_in']:
-                self.create_saved_cover_letter_table()
+                # self.create_saved_cover_letter_table()
                 state = self.search_cover_letter(state)
                 if not state['cover_letter']: 
                     return {**state, "response": "자기소개서를 찾을 수 없습니다.", "intent_interview": "END"}
@@ -877,7 +1070,10 @@ class JobAssistantBot:
         workflow.add_node("unknown_message", self.unknown_message)
         workflow.add_node("tenacity_interview", self.tenacity_interview)
         workflow.add_node("technology_interview", self.technology_interview)
+        workflow.add_node("hallucination_check", self.hallucination_check)
+        
         workflow.set_entry_point("classify_intent")
+
         workflow.add_conditional_edges(
             "classify_intent",
             lambda state: state.get('interview_intent', state.get('intent', 'UNKNOWN')),
@@ -888,6 +1084,7 @@ class JobAssistantBot:
                 "UNKNOWN": "unknown_message"
             }
         )
+
         workflow.add_conditional_edges(
             "search_job_chat",
             lambda state: (
@@ -900,18 +1097,30 @@ class JobAssistantBot:
                 "END": END
             }
         )
+
         workflow.add_conditional_edges(
             "cover_letter_chat",
             lambda state: (
-                state.get('intent_cover_letter')
-                if state.get('intent_cover_letter') in ['UNKNOWN']
-                else 'END'
+                "UNKNOWN" if state.get('intent_cover_letter') in ['UNKNOWN']
+                else "HALLUCINATION_CHECK" if state.get('cover_letter_state') == 'COMPLETED'
+                else "END"
             ),
             {
                 "UNKNOWN": "unknown_message",
+                "HALLUCINATION_CHECK": "hallucination_check",
                 "END": END
             }
         )
+
+        workflow.add_conditional_edges(
+            "hallucination_check",
+            lambda state: state['hallucination_intent'],
+            {
+                "rewrite": "cover_letter_chat",
+                "ok": END
+            }
+        )
+
         workflow.add_conditional_edges(
             "interview_chat",
             lambda state: (
@@ -925,6 +1134,7 @@ class JobAssistantBot:
                 "END": END
             }
         )
+
         workflow.add_conditional_edges(
             "tenacity_interview",
             lambda state: "END" if not state.get('interview_in') else "END",
@@ -932,6 +1142,7 @@ class JobAssistantBot:
                 "END": END
             }
         )
+
         workflow.add_conditional_edges(
             "technology_interview",
             lambda state: "END" if not state.get('interview_in') else "END",
@@ -939,7 +1150,9 @@ class JobAssistantBot:
                 "END": END
             }
         )
+
         workflow.add_edge("unknown_message", END)
+
         return workflow.compile()
     
     def show_graph(self, workflow):

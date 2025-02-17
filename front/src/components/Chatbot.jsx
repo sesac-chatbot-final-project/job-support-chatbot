@@ -1,3 +1,4 @@
+// 불필요한 import/변수 제거
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -14,6 +15,30 @@ import {
   faVolumeUp,
   faVolumeMute,
 } from "@fortawesome/free-solid-svg-icons";
+import RingLoader from "react-spinners/RingLoader";
+
+// 전체 화면 로딩 오버레이 컴포넌트
+const LoadingOverlay = ({ loading }) => {
+  if (!loading) return null;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        backgroundColor: "rgba(223, 223, 223, 0.3)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 1000,
+      }}
+    >
+      <RingLoader color="#5e6aec" loading={loading} size={100} />
+    </div>
+  );
+};
 
 // Custom hook for auto-scrolling
 const useAutoScroll = (dependency) => {
@@ -39,48 +64,17 @@ const useAutoResize = (value) => {
   return textareaRef;
 };
 
-const ProgressBar = ({ progress = 0 }) => (
-  <div className="mt-2 flex justify-center items-center w-full">
-    <div className="w-1/2 max-w-xl">
-      <div
-        className="progress bg-gray-200"
-        style={{
-          height: "9px",
-          borderRadius: "4px",
-          width: "100%",
-          position: "relative",
-        }}
-      >
-        <div
-          className="progress-bar"
-          role="progressbar"
-          style={{
-            width: `${progress}%`,
-            height: "100%",
-            borderRadius: "4px",
-            background:
-              "linear-gradient(90deg, rgb(150, 159, 255) 0%, #8e96f3 100%)",
-            transition: "width 0.3s ease-in-out",
-          }}
-          aria-valuenow={progress}
-          aria-valuemin="0"
-          aria-valuemax="100"
-        />
-      </div>
-    </div>
-  </div>
-);
-
+// URL 감지를 위한 정규표현식
 const urlRegex = /(https?:\/\/[^\s]+)/g;
 
 // SpeechSynthesis API를 사용하여 텍스트를 음성으로 읽어주는 함수
 const speakText = (text) => {
   if ("speechSynthesis" in window) {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "ko-KR"; // 한국어 설정
+    utterance.lang = "ko-KR";
     utterance.rate = 1;
     utterance.volume = 1;
-    window.speechSynthesis.cancel(); // 이전 재생 취소
+    window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   } else {
     console.error("SpeechSynthesis API is not supported in this browser.");
@@ -88,49 +82,35 @@ const speakText = (text) => {
 };
 
 const Chatbot = () => {
+  // 상태들
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  // ttsUrl는 자동 재생 실패 시 수동 재생용으로 사용 (참고용)
   const [ttsUrl, setTtsUrl] = useState(null);
-  // 기본 TTS 설정을 "꺼진" 상태로 설정 (false)
+  // 기본 TTS는 꺼진 상태
   const [ttsEnabled, setTtsEnabled] = useState(false);
-  const navigate = useNavigate();
-  const scrollRef = useAutoScroll(messages);
-  const [progress, setProgress] = useState(0);
-  const [chatBoxHeight, setChatBoxHeight] = useState("calc(100vh - 200px)");
-  const textareaRef = useAutoResize(input);
 
-  // 음성 녹음 관련 상태 및 refs (기존 기능 유지)
+  // 녹음 상태
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
 
+  // UI 레이아웃 관련
+  const scrollRef = useAutoScroll(messages);
+  const textareaRef = useAutoResize(input);
+
+  const navigate = useNavigate();
   const didInit = useRef(false);
 
-  const updateChatBoxHeight = useCallback(() => {
-    if (scrollRef.current) {
-      const contentHeight = scrollRef.current.scrollHeight;
-      const windowHeight = window.innerHeight;
-      const minHeight = windowHeight - 200;
-      const newHeight = Math.max(minHeight, contentHeight);
-      setChatBoxHeight(`${newHeight}px`);
-    }
-  }, [scrollRef]);
-
-  useEffect(() => {
-    updateChatBoxHeight();
-  }, [messages, updateChatBoxHeight]);
-
+  // 메시지 내 줄바꿈 및 링크 처리
   const processMessage = useCallback((text) => {
     if (typeof text !== "string") return text;
-    return text.split("\n").map((line, lineIndex) => {
+    return text.split("\n").map((line, index) => {
       const parts = line.split(urlRegex);
       return (
-        <React.Fragment key={lineIndex}>
+        <React.Fragment key={index}>
           {parts.map((part, partIndex) => {
             if (part.match(urlRegex)) {
               return (
@@ -147,40 +127,59 @@ const Chatbot = () => {
             }
             return part;
           })}
-          {lineIndex < text.split("\n").length - 1 && <br />}
+          {index < text.split("\n").length - 1 && <br />}
         </React.Fragment>
       );
     });
   }, []);
 
-  const displayBotMessage = useCallback(
-    (message) => {
-      if (!message?.trim()) {
-        message = "죄송합니다. 응답을 생성하는 중 오류가 발생했습니다.";
-      }
+  // 긴 메시지 스트리밍
+  const simulateStreaming = useCallback(
+    (fullText) => {
+      const words = fullText.split(" ");
+      let partialText = "";
       setMessages((prev) => [
         ...prev,
-        {
-          sender: "bot",
-          text: processMessage(
-            message.split("\n").map((line, index) => (
-              <React.Fragment key={index}>
-                {line}
-                <br />
-              </React.Fragment>
-            ))
-          ),
-          timestamp: new Date().toISOString(),
-        },
+        { sender: "bot", text: "", timestamp: new Date().toISOString() },
       ]);
-      // TTS가 활성화된 경우에만 자동 음성 재생 시도
+      words.forEach((word, index) => {
+        setTimeout(() => {
+          partialText += word + " ";
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            newMessages[newMessages.length - 1].text =
+              processMessage(partialText);
+            return newMessages;
+          });
+        }, index * 100);
+      });
+    },
+    [processMessage]
+  );
+
+  // 봇 메시지 표시
+  const displayBotMessage = useCallback(
+    (message) => {
+      if (message.length > 100) {
+        simulateStreaming(message);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            sender: "bot",
+            text: processMessage(message),
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+      }
       if (ttsEnabled && message.includes("면접")) {
         speakText(message);
       }
     },
-    [processMessage, ttsEnabled]
+    [processMessage, ttsEnabled, simulateStreaming]
   );
 
+  // 사용자 메시지 표시
   const displayUserMessage = useCallback(
     (message) => {
       if (!message?.trim()) return;
@@ -196,7 +195,7 @@ const Chatbot = () => {
     [processMessage]
   );
 
-  // 수동 음성 재생 버튼에서 사용할 playTTS 함수 정의
+  // TTS 수동 재생
   const playTTS = useCallback(() => {
     if (ttsUrl) {
       const audio = new Audio(ttsUrl);
@@ -207,6 +206,7 @@ const Chatbot = () => {
     }
   }, [ttsUrl]);
 
+  // 초기 웰컴 메시지
   useEffect(() => {
     if (!didInit.current) {
       didInit.current = true;
@@ -216,19 +216,7 @@ const Chatbot = () => {
     }
   }, [displayBotMessage]);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-      updateChatBoxHeight();
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [updateChatBoxHeight]);
-
-  const getResponsiveWidth = useCallback(() => {
-    return `${Math.min(windowWidth, 1900)}px`;
-  }, [windowWidth]);
-
+  // 메시지 전송 함수
   const sendMessage = useCallback(async () => {
     if (!input.trim()) return;
     const token = localStorage.getItem("token");
@@ -240,12 +228,8 @@ const Chatbot = () => {
     displayUserMessage(userInput);
     setInput("");
     setIsLoading(true);
-    setProgress(0);
     setTtsUrl(null);
-    const controller = new AbortController();
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => (prev >= 90 ? 90 : prev + 10));
-    }, 300);
+
     try {
       const response = await fetch("http://127.0.0.1:8000/api/chat/", {
         method: "POST",
@@ -254,12 +238,10 @@ const Chatbot = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ user_input: userInput }),
-        signal: controller.signal,
       });
       if (!response.ok) throw new Error("API request failed");
       const data = await response.json();
       displayBotMessage(data.message || "죄송합니다. 응답을 받지 못했습니다.");
-      // SpeechSynthesis API는 displayBotMessage 내에서 자동 호출됨.
     } catch (error) {
       if (error.name === "AbortError") {
         displayBotMessage("요청이 취소되었습니다.");
@@ -268,19 +250,11 @@ const Chatbot = () => {
         displayBotMessage("죄송합니다. 서버와의 통신 중 오류가 발생했습니다.");
       }
     } finally {
-      clearInterval(progressInterval);
-      setProgress(100);
-      setTimeout(() => {
-        setIsLoading(false);
-        setProgress(0);
-      }, 500);
+      setIsLoading(false);
     }
-    return () => {
-      controller.abort();
-      clearInterval(progressInterval);
-    };
   }, [input, displayUserMessage, displayBotMessage]);
 
+  // 녹음 시작
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -305,6 +279,7 @@ const Chatbot = () => {
     }
   }, []);
 
+  // 녹음 중지
   const stopRecording = useCallback(() => {
     if (
       mediaRecorderRef.current &&
@@ -315,6 +290,7 @@ const Chatbot = () => {
     }
   }, []);
 
+  // 녹음 파일 전송
   const sendAudioToOpenAI = useCallback(async () => {
     if (!audioBlob) {
       alert("녹음된 음성이 없습니다.");
@@ -326,10 +302,12 @@ const Chatbot = () => {
       return;
     }
     setIsTranscribing(true);
+
     const formData = new FormData();
     formData.append("file", audioBlob, "audio.webm");
     formData.append("model", "whisper-1");
     formData.append("language", "ko");
+
     try {
       const response = await axios.post(
         "https://api.openai.com/v1/audio/transcriptions",
@@ -343,6 +321,7 @@ const Chatbot = () => {
       );
       const transcript = response.data.text;
       displayUserMessage(transcript);
+
       const chatResponse = await fetch("http://127.0.0.1:8000/api/chat/", {
         method: "POST",
         headers: {
@@ -371,19 +350,22 @@ const Chatbot = () => {
 
   return (
     <div
-      className="container-fluid p-0 vh-100 d-flex flex-column"
+      className="container-fluid"
       style={{
-        width: getResponsiveWidth(),
-        margin: "0 auto",
-        minWidth: "320px",
+        height: "100vh",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        width: "100vw",
+        maxWidth: "none",
       }}
     >
       <header
-        className="d-flex align-items-center justify-content-between text-white px-3 py-2"
+        className="d-flex justify-content-between align-items-center px-3 px-md-5 py-3 container-fluid"
         style={{
           backgroundColor: "#5e6aec",
-          width: "100%",
           flexShrink: 0,
+          width: "100vw",
         }}
       >
         <div className="d-flex align-items-center">
@@ -391,11 +373,12 @@ const Chatbot = () => {
             src="/images/logo.png"
             alt="Company Logo"
             className="me-3"
+            onClick={() => navigate("/")}
             style={{ width: "150px", height: "60px" }}
           />
         </div>
         <div className="d-flex align-items-center">
-          {/* TTS On/Off 토글 버튼 */}
+          {/* TTS 토글 버튼 */}
           <button
             className="btn btn-link text-white"
             onClick={() => setTtsEnabled((prev) => !prev)}
@@ -416,27 +399,32 @@ const Chatbot = () => {
           </button>
         </div>
       </header>
+
       <div
-        className="d-flex flex-column flex-grow-1 p-4"
-        style={{ width: "100%" }}
+        style={{
+          flexGrow: 1,
+          overflowY: "auto",
+          padding: "1rem",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
         <div
           ref={scrollRef}
-          className="chat-box p-4"
+          className="chat-box"
           style={{
-            height: chatBoxHeight,
-            width: "100%",
+            flexGrow: 1,
             overflowY: "auto",
             background: "#ffffff",
             border: "1px solid #dee2e6",
-            borderRadius: "18px",
-            transition: "height 0.3s ease-in-out",
+            borderRadius: "19px",
+            padding: "1rem",
           }}
         >
           {messages.map((msg, index) => (
             <div
               key={`${msg.timestamp}-${index}`}
-              className={`chat p-2 my-2 rounded d-flex align-items-start ${
+              className={`chat p-2 my-2 mx-4 rounded d-flex align-items-start ${
                 msg.sender === "user"
                   ? "custom-user-message text-white align-self-end"
                   : "custom-bot-message"
@@ -456,8 +444,7 @@ const Chatbot = () => {
             </div>
           ))}
         </div>
-        {isLoading && <ProgressBar progress={progress} />}
-        {/* 수동 음성 재생 버튼 (ttsUrl이 있을 경우) */}
+
         {ttsUrl && (
           <div style={{ textAlign: "center", marginTop: "10px" }}>
             <button className="btn btn-primary" onClick={playTTS}>
@@ -465,6 +452,7 @@ const Chatbot = () => {
             </button>
           </div>
         )}
+
         <div className="chat-input mt-3" style={{ width: "100%" }}>
           <div className="input-group" style={{ width: "100%" }}>
             <textarea
@@ -491,6 +479,9 @@ const Chatbot = () => {
                 lineHeight: "1.5",
                 paddingTop: "8px",
                 paddingBottom: "8px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
               }}
               onInput={(e) => {
                 if (e.target.scrollHeight > 40) {
@@ -518,6 +509,7 @@ const Chatbot = () => {
                   icon={isRecording ? faStopCircle : faMicrophone}
                 />
               </button>
+
               {audioBlob && !isTranscribing && (
                 <button
                   className="btn btn-link"
@@ -532,6 +524,7 @@ const Chatbot = () => {
                   <FontAwesomeIcon icon={faPaperPlane} />
                 </button>
               )}
+
               <button
                 className="send-btn"
                 onClick={sendMessage}
@@ -556,6 +549,8 @@ const Chatbot = () => {
           </div>
         </div>
       </div>
+      {/* 전체 화면 로딩 오버레이 */}
+      <LoadingOverlay loading={isLoading} />
     </div>
   );
 };

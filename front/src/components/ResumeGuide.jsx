@@ -115,20 +115,20 @@ const ResumeGuide = () => {
           <button
             onClick={() => navigate("/customer-support")}
             className="btn btn-link text-secondary"
-            style={{ fontSize: "12px", lineHeight: "1.1", ...fontFamily }}
+            style={{ fontSize: "12px", lineHeight: "1.1" }}
           >
             고객센터
           </button>
           <button
             onClick={() => navigate("/terms")}
             className="btn btn-link text-secondary"
-            style={{ fontSize: "12px", lineHeight: "1.1", ...fontFamily }}
+            style={{ fontSize: "12px", lineHeight: "1.1" }}
           >
             이용약관
           </button>
         </div>
         <div className="text-center mt-3">
-          <p className="text-muted" style={{ fontSize: "12px", ...fontFamily }}>
+          <p className="text-muted" style={{ fontSize: "12px" }}>
             © 2024 jobara Company. All rights reserved.
           </p>
         </div>

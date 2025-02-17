@@ -291,6 +291,9 @@ class JobAssistantBot:
             [사용자 경험 및 직무]
             {user_input}
 
+            [글자수 요구사항]
+            {char_limit:->기본값: 각 항목 700자}
+
             자기소개서는 다음 4가지를 포함해야 합니다:
             1. 지원 동기
             2. 성격의 장단점
@@ -300,13 +303,20 @@ class JobAssistantBot:
             사용자의 경험을 기반으로 자기소개서를 작성하세요.
             사용자의 경험과 채용 공고 정보를 비교해서, 사용자의 경험과 강점 중에 채용 공고의 우대사항이나 자격요건과 맞는 부분을 찾아 강조하세요.
             사용자의 경험이 해당 공고의 직무에 어떻게 도움이 될지 설명할 수 있도록 작성해주세요.
-            각 항목을 아래 형식에 맞춰 작성해주세요 (항목 별 700자 내외, 총 3000자 내외).
-            형식: [제목] \n 내용
+            
+            각 항목을 아래 형식에 맞춰 요청된 글자수로 작성해주세요.
+            사용자가 특정 글자수를 지정한 경우 해당 글자수를 따르고, 지정하지 않은 경우 기본값인 700자로 작성합니다.
+            글자수 제한을 엄격히 준수하여 작성합니다.
+
+            형식: [제목] \n 내용 (글자수: xxx자)
             결과:""")
         self.cover_letter_write_without_job = PromptTemplate.from_template(
             """
             [사용자 경험 및 직무]
             {user_input}
+
+            [글자수 요구사항]
+            {char_limit:->기본값: 각 항목 700자}
 
             자기소개서는 다음 4가지를 포함해야 합니다:
             1. 지원 동기
@@ -316,8 +326,12 @@ class JobAssistantBot:
 
             사용자의 경험을 기반으로 자기소개서를 작성하세요.
             사용자의 경험이 입력한 직무에 어떻게 도움이 될지 설명할 수 있도록 작성해주세요.
-            각 항목을 구체적으로 아래 형식에 맞춰 작성해주세요 (항목 별 700자 내외, 총 3000자 내외).
-            형식: [제목] \n 내용
+            
+            각 항목을 아래 형식에 맞춰 요청된 글자수로 작성해주세요.
+            사용자가 특정 글자수를 지정한 경우 해당 글자수를 따르고, 지정하지 않은 경우 기본값인 700자로 작성합니다.
+            글자수 제한을 엄격히 준수하여 작성합니다.
+
+            형식: [제목] \n 내용 (글자수: xxx자)
             결과:""")
         self.cover_letter_refine = PromptTemplate.from_template(
             """
@@ -333,7 +347,7 @@ class JobAssistantBot:
 
             자기소개서 출력 결과는 항상 지원 동기, 성격의 장단점, 직무 역량, 입사 후 포부를 포함해야 합니다.
             아래 형식에 맞춰 수정된 자기소개서를 출력하세요.
-            형식: [제목] \n 내용
+            형식: [제목] \n 내용 (글자수: xxx자)
             결과:""")
         self.interview_intent = PromptTemplate.from_template(
             """
@@ -735,7 +749,7 @@ class JobAssistantBot:
                         if not job_info:
                             return {**state, "response": "선택한 공고를 찾을 수 없습니다."}
                         cover_letter_writing = str(self.llm.invoke(
-                            self.cover_letter_write.format(**job_info, user_input=state["user_input"])
+                            self.cover_letter_write.format(**job_info, user_input=state["user_input"], char_limit=state.get("char_limit", ""))
                         ).content).strip()
                         self.create_saved_cover_letter_table()
                         self.save_cover_letter_to_table(state['user_id'], job_info['job_name'], cover_letter_writing)
@@ -753,7 +767,7 @@ class JobAssistantBot:
                 print('채용 공고 검색하지 않음')
                 job_exp = str(self.llm.invoke(self.experience_prompt_without_job.format(user_input=state["user_input"])).content).strip()
                 if job_exp == 'all_include' or (job_exp == 'job_include' and state['experience']) or (job_exp == 'experience_include' and state['job_name']):
-                    cover_letter_writing = str(self.llm.invoke(self.cover_letter_write_without_job.format(user_input=state["user_input"])).content).strip()
+                    cover_letter_writing = str(self.llm.invoke(self.cover_letter_write_without_job.format(user_input=state["user_input"], char_limit=state.get("char_limit", ""))).content).strip()
                     self.create_saved_cover_letter_table()
                     self.save_cover_letter_to_table(state['user_id'], 'just_cl', cover_letter_writing)
                     response += cover_letter_writing
@@ -813,6 +827,7 @@ class JobAssistantBot:
                 return {**state, "intent_interview": "UNKNOWN"}
         except Exception as e:
             print(f'에러 발생: {e}')
+
     
     def tenacity_interview(self, state: State) -> State:
         """인성 면접 기능"""

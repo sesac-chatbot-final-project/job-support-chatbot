@@ -32,7 +32,7 @@ const Main = () => {
     >
       {/* Header */}
       <header
-        className="d-flex justify-content-between align-items-center px-4 py-3 w-100"
+        className="d-flex justify-content-between align-items-center px-3 px-md-5 py-3 container-fluid"
         style={{ backgroundColor: mainColor }}
       >
         <img
