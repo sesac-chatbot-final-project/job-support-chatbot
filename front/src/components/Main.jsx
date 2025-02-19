@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -6,6 +6,25 @@ const Main = () => {
   const navigate = useNavigate();
   const mainColor = "#5e6aec";
   const grayColor = "#6c757d";
+
+  // 로그인 상태를 관리할 state 추가
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // 컴포넌트 마운트 시 localStorage에서 토큰이 있는지 확인
+  useEffect(() => {
+    setTimeout(() => {
+      const token = localStorage.getItem("token");
+      setIsLoggedIn(token !== null);
+    }, 0); // 즉시 실행하되 렌더링 이후 적용
+  }, []);
+
+  // 로그아웃 핸들러
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    // 필요한 경우 다른 로그인 관련 데이터도 제거 가능
+    setIsLoggedIn(false);
+    navigate("/"); // 로그아웃 후 홈으로 이동
+  };
 
   const tipCards = [
     {
@@ -39,49 +58,74 @@ const Main = () => {
           src="/images/logo.png"
           alt="Logo"
           className="cursor-pointer"
-          style={{ height: "60px" }}
+          style={{ height: "60px", cursor: "pointer" }}
           onClick={() => navigate("/")}
         />
         <div className="d-flex gap-2">
-          <button
-            onClick={() => navigate("/login")}
-            className="btn btn-outline-light rounded-4"
-          >
-            로그인
-          </button>
-          <button
-            onClick={() => navigate("/signup")}
-            className="btn btn-light rounded-4"
-            style={{ color: mainColor }}
-          >
-            회원가입
-          </button>
+          {isLoggedIn ? (
+            <>
+              <button
+                onClick={() => navigate("/chatbot")}
+                className="btn btn-outline-light rounded-5 fw-bold"
+              >
+                챗봇
+              </button>
+              <button
+                onClick={handleLogout}
+                className="btn btn-light rounded-5 fw-bold"
+                style={{ color: mainColor }}
+              >
+                로그아웃
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate("/login")}
+                className="btn btn-outline-light rounded-5 fw-bold"
+              >
+                로그인
+              </button>
+              <button
+                onClick={() => navigate("/signup")}
+                className="btn btn-light rounded-5 fw-bold"
+                style={{ color: mainColor }}
+              >
+                회원가입
+              </button>
+            </>
+          )}
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow-1 w-100 px-3 px-md-5">
+      <main className="flex-grow-1 w-100 mt-3 px-3 px-md-5">
         {/* Chatbot Image Section */}
         <section className="my-4 text-center">
           <img
             src="/images/chatbot_main.png"
             alt="Chatbot Introduction"
             className="img-fluid rounded mx-auto d-block"
-            style={{ maxHeight: "300px", objectFit: "cover", width: "100%" }}
+            style={{
+              maxHeight: "300px",
+              objectFit: "cover",
+              width: "100%",
+              maxWidth: "1250px",
+            }}
           />
         </section>
 
         {/* Job Search Tips Section */}
         <section className="py-2 mx-auto" style={{ maxWidth: "1200px" }}>
           <h5 className="fw-bold mb-4 text-start" style={{ color: grayColor }}>
-            취준생을 위한 꿀팁
+            취업 준비 TIP!
           </h5>
           <div className="row justify-content-center">
             {tipCards.map((card, index) => (
               <div key={index} className="col-md-4 mb-3">
                 <button
                   onClick={() => navigate(card.route)}
-                  className="btn btn-white w-100 border shadow-sm p-3 py-4 rounded-4 d-flex flex-column gap-2"
+                  className="btn btn-white w-100 border shadow-sm p-3 py-4 rounded-4 d-flex flex-column align-items-center gap-2 text-center"
                   style={{ color: mainColor }}
                 >
                   <h3 className="fs-5 fw-bold" style={{ color: mainColor }}>

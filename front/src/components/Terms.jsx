@@ -1,6 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHome } from "@fortawesome/free-solid-svg-icons";
 
 const Terms = () => {
   const navigate = useNavigate();
@@ -21,26 +23,38 @@ const Terms = () => {
           alt="Logo"
           className="h-50 cursor-pointer"
           onClick={() => navigate("/")}
+          style={{ cursor: "pointer" }}
         />
-        <button
-          onClick={() => navigate("/")}
-          className="btn btn-outline-light rounded-4"
-        >
-          홈으로
+        <button onClick={() => navigate("/")} className="btn rounded-5 fw-bold">
+          <FontAwesomeIcon
+            icon={faHome}
+            style={{
+              color: "white",
+              border: "none",
+              width: "1.4rem",
+              height: "1.4rem",
+            }}
+          />
         </button>
       </header>
 
       {/* 이용 약관 내용 */}
       <div className="flex-grow-1 d-flex flex-column align-items-center">
-        <h3 className="text-center mb-4 py-5 w-100">
+        <h3
+          className="text-center mt-5 py-2 w-100"
+          style={{ color: "GrayText" }}
+        >
           <strong>이용 약관</strong>
         </h3>
 
-        <p className="lead text-center">
+        <p
+          className="lead text-center px-5"
+          style={{ color: "GrayText", fontSize: "1.1rem" }}
+        >
           서비스를 사용하기 전에 아래 이용 약관을 잘 읽어주세요.
         </p>
 
-        <div className="w-90 px-5 px-md-5">
+        <div className="w-90 px-5 px-md-5" style={{ color: "GrayText" }}>
           <h5>
             <strong>1. 약관 동의</strong>
           </h5>
@@ -82,7 +96,7 @@ const Terms = () => {
           </p>
         </div>
         {/* Footer */}
-        <footer className="bg-light py-4 w-100">
+        <footer className="bg-light mt-5 py-4 w-100">
           <div className="container d-flex justify-content-center gap-3">
             <button
               onClick={() => navigate("/customer-support")}

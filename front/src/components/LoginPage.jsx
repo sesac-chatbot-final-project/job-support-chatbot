@@ -1,6 +1,8 @@
 // components/LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHome } from "@fortawesome/free-solid-svg-icons";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -10,6 +12,7 @@ const LoginPage = () => {
     password: "",
   });
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,6 +21,8 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); // 기존 오류 메시지 초기화
+    setSuccessMessage(""); // ✅ 성공 메시지 초기화
     try {
       const response = await fetch("http://localhost:8000/api/users/login/", {
         method: "POST",
@@ -30,10 +35,11 @@ const LoginPage = () => {
         return;
       }
       const data = await response.json();
-      // 토큰과 사용자 정보를 localStorage에 저장
       localStorage.setItem("token", data.token);
       localStorage.setItem("userProfile", JSON.stringify(data.userProfile));
-      navigate("/settings");
+
+      setSuccessMessage("로그인 성공!"); // ✅ 로그인 성공 메시지 표시
+      setTimeout(() => navigate("/settings"), 1500); // 1.5초 후 페이지 이동
     } catch (error) {
       console.error(error);
       setError("로그인 요청 중 오류가 발생했습니다.");
@@ -59,18 +65,27 @@ const LoginPage = () => {
             alt="Logo"
             className="h-50 cursor-pointer"
             onClick={() => navigate("/")}
+            style={{ cursor: "pointer" }}
           />
           <button
             onClick={() => navigate("/")}
-            className="btn btn-outline-light rounded-4"
+            className="btn rounded-5 fw-bold"
           >
-            홈으로
+            <FontAwesomeIcon
+              icon={faHome}
+              style={{
+                color: "white",
+                border: "none",
+                width: "1.4rem",
+                height: "1.4rem",
+              }}
+            />
           </button>
         </div>
       </header>
 
       <div
-        className="bg-white p-5 rounded-5 shadow-lg text-center"
+        className="bg-white p-5 rounded-5 text-center mb-4"
         style={{
           width: "500px",
           margin: "0 auto",
@@ -81,14 +96,23 @@ const LoginPage = () => {
         <h3 className="mb-4 text-center" style={{ color: "GrayText" }}>
           <strong>로그인</strong>
         </h3>
+        {/* 에러 메시지 (빨간색) */}
         {error && <div className="alert alert-danger">{error}</div>}
+
+        {/* ✅ 로그인 성공 메시지 (파란색) */}
+        {successMessage && (
+          <div className="alert alert-primary">{successMessage}</div>
+        )}
+
         <form onSubmit={handleSubmit}>
-        <div className="mb-3 text-start px-2 fw-bold">
+          <div className="mb-3 text-start px-2 fw-bold">
             <label
               htmlFor="username"
               className="form-label"
-              style={{ color: "GrayText" }}
-            >아이디</label>
+              style={{ color: "GrayText", fontSize: "17px" }}
+            >
+              아이디
+            </label>
             <input
               type="text"
               name="username"
@@ -101,10 +125,12 @@ const LoginPage = () => {
           </div>
           <div className="mb-3 text-start px-2 fw-bold">
             <label
-              htmlFor="username"
+              htmlFor="password"
               className="form-label"
-              style={{ color: "GrayText" }}
-            >비밀번호</label>
+              style={{ color: "GrayText", fontSize: "17px" }}
+            >
+              비밀번호
+            </label>
             <input
               type="password"
               name="password"
@@ -118,8 +144,12 @@ const LoginPage = () => {
           <div className="d-flex justify-content-center">
             <button
               type="submit"
-              className="btn px-4 rounded-5"
-              style={{ backgroundColor: mainColor, color: "white" }}
+              className="btn py-2 px-4 rounded-5 mt-3 fw-bold"
+              style={{
+                backgroundColor: mainColor,
+                color: "white",
+                fontSize: "18px",
+              }}
             >
               로그인
             </button>

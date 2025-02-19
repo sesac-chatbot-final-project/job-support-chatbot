@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHome } from "@fortawesome/free-solid-svg-icons";
 
 export const SignUpPage = () => {
   const navigate = useNavigate();
@@ -92,43 +94,59 @@ export const SignUpPage = () => {
             alt="Logo"
             className="h-50 cursor-pointer"
             onClick={() => navigate("/")}
+            style={{ cursor: "pointer" }}
           />
           <button
             onClick={() => navigate("/")}
-            className="btn btn-outline-light rounded-4"
+            className="btn rounded-5 fw-bold"
           >
-            홈으로
+            <FontAwesomeIcon
+              icon={faHome}
+              style={{
+                color: "white",
+                border: "none",
+                width: "1.4rem",
+                height: "1.4rem",
+              }}
+            />
           </button>
         </div>
       </header>
       <div
-        className="bg-white p-5 rounded-5 shadow-lg text-center "
+        className="bg-white p-5 rounded-5 text-center mb-4"
         style={{
           width: "500px",
+          height: "auto",
           margin: "0 auto",
           marginTop: "50px",
-          fontFamily: "Nanum Gothic",
+          fontFamily: "Noto-Sans, sans-serif",
         }}
       >
         <h3 className="mb-4 text-center" style={{ color: "GrayText" }}>
           <strong>회원가입</strong>
         </h3>
         {errorMessage && (
-          <div className="alert alert-danger">{errorMessage}</div>
+          <div
+            className={`alert ${
+              isUsernameAvailable === true ? "alert-primary" : "alert-danger"
+            }`}
+          >
+            {errorMessage}
+          </div>
         )}
         <form onSubmit={handleSignUp}>
           <div className="mb-3 text-start px-2 fw-bold">
             <label
               htmlFor="username"
               className="form-label"
-              style={{ color: "GrayText" }}
+              style={{ color: "GrayText", fontSize: "17px" }}
             >
               아이디
             </label>
             <div className="input-group">
               <input
                 type="text"
-                className="form-control rounded-4 "
+                className="form-control rounded-4"
                 id="username"
                 placeholder="아이디를 입력하세요"
                 value={username}
@@ -151,7 +169,7 @@ export const SignUpPage = () => {
             <label
               htmlFor="password"
               className="form-label"
-              style={{ color: "GrayText" }}
+              style={{ color: "GrayText", fontSize: "17px" }}
             >
               비밀번호
             </label>
@@ -167,8 +185,12 @@ export const SignUpPage = () => {
           </div>
           <button
             type="submit"
-            className="btn px-4 rounded-5 mt-4"
-            style={{ backgroundColor: mainColor, color: "white" }}
+            className="btn px-4 rounded-5 mt-4 fw-bold"
+            style={{
+              backgroundColor: mainColor,
+              color: "white",
+              fontSize: "18px",
+            }}
           >
             회원가입
           </button>

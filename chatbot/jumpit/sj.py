@@ -439,6 +439,36 @@ class JobAssistantBot:
         self.db.commit()
         cursor.close()
     
+    def create_selected_job_posting_table(self):
+        """상세 정보 조회한 공고 저장하는 DB"""
+        cursor = self.db.cursor()
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS selected_job_posting (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            customer_id VARCHAR(20),
+            제목 VARCHAR(255),
+            회사명 VARCHAR(255),
+            사용기술 TEXT,
+            근무지역 VARCHAR(255),
+            근로조건 VARCHAR(255),
+            모집기간 VARCHAR(255),
+            링크 TEXT,
+            저장일시 DATETIME DEFAULT CONVERT_TZ(NOW(), 'UTC', 'Asia/Seoul'),
+            주요업무 TEXT,
+            자격요건 TEXT,
+            우대사항 TEXT,
+            복지_및_혜택 TEXT,
+            채용절차 TEXT,
+            학력 VARCHAR(255),
+            근무지역_상세 VARCHAR(255),
+            마감일자 VARCHAR(255),
+            foreign key(customer_id) references customer (customer_id)
+        )
+        """
+        cursor.execute(create_table_query)
+        self.db.commit()
+        cursor.close()
+
     def create_saved_cover_letter_table(self):
         """작성한 자기소개서 저장하는 DB"""
         cursor = self.db.cursor()
@@ -470,6 +500,22 @@ class JobAssistantBot:
         """
         cursor.execute(create_table_query)
         cursor.execute("DELETE FROM saved_interview_question")
+        self.db.commit()
+        cursor.close()
+
+    def create_personal_interview_question_table(self):
+        """개인 면접 질문들 저장하는 DB"""
+        cursor = self.db.cursor()
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS personal_interview_question (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            customer_id VARCHAR(20),
+            면접질문 TEXT,
+            저장일시 DATETIME DEFAULT CONVERT_TZ(NOW(), 'UTC', 'Asia/Seoul'),
+            foreign key(customer_id) references customer (customer_id)
+        )
+        """
+        cursor.execute(create_table_query)
         self.db.commit()
         cursor.close()
     
@@ -699,6 +745,54 @@ class JobAssistantBot:
 
 
         elif search_road == "상세 정보":
+            self.create_selected_job_posting_table()
+            print("조회한 상세 정보 테이블 생성 완료")
+
+            # 선택된 공고 정보 가져오기
+            get_job_query = """
+            SELECT *
+            FROM (
+                SELECT *, ROW_NUMBER() OVER (ORDER BY id ASC) AS rn
+                FROM saved_job_posting
+            ) AS numbered_jobs
+            WHERE rn = %s
+            """
+            cursor = self.db.cursor()
+            cursor.execute(get_job_query, (num,))
+            job_data = cursor.fetchone()
+
+            if job_data:
+                # selected_job_posting 테이블에 저장
+                save_selected_job_query = """
+                INSERT INTO selected_job_posting (
+                    customer_id, 제목, 회사명, 사용기술, 근무지역,
+                    근로조건, 모집기간, 링크, 주요업무, 자격요건,
+                    우대사항, 복지_및_혜택, 채용절차, 학력,
+                    근무지역_상세, 마감일자
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(save_selected_job_query, (
+                    state['user_id'],  # customer_id
+                    job_data[1],       # 제목
+                    job_data[2],       # 회사명
+                    job_data[3],       # 사용기술
+                    job_data[4],       # 근무지역
+                    job_data[5],       # 근로조건
+                    job_data[6],       # 모집기간
+                    job_data[7],       # 링크
+                    job_data[8],       # 주요업무
+                    job_data[9],       # 자격요건
+                    job_data[10],      # 우대사항
+                    job_data[11],      # 복지_및_혜택
+                    job_data[12],      # 채용절차
+                    job_data[13],      # 학력
+                    job_data[14],      # 근무지역_상세
+                    job_data[15]       # 마감일자
+                ))
+                self.db.commit()
+                print(f"공고 {num}번이 selected_job_posting 테이블에 저장되었습니다.")  
+
+
             moreinfo = self.llm.invoke(self.moreinfo_extract_prompt.format(user_input=state["user_input"])).content
             moreinfo_list = moreinfo.split(',')
             field_name = ', '.join(mi.strip() for mi in moreinfo_list)
@@ -713,6 +807,7 @@ class JobAssistantBot:
             cursor = self.db.cursor()
             cursor.execute(moreinfo_query, (num,))
             result = cursor.fetchone()
+
             cursor.close() 
             if result:
                 extracted_info = "\n".join(f"{name}: {detail}" for name, detail in zip(moreinfo_list, result))
@@ -806,6 +901,7 @@ class JobAssistantBot:
         """모의 면접 기능"""
         try:
             self.create_saved_interview_question_table()
+            self.create_personal_interview_question_table()
             current_intent = state.get('intent_interview')
             if current_intent in ['TENACITY', 'TECHNOLOGY']:
                 if "종료" in state["user_input"].lower():
@@ -828,7 +924,31 @@ class JobAssistantBot:
         except Exception as e:
             print(f'에러 발생: {e}')
 
-    
+    def save_interview_question_to_table(self, customer_id: str, question: str):
+        """면접 질문을 임시 테이블과 개인 기록 테이블에 저장"""
+        cursor = self.db.cursor()
+        try:
+            # 기존 임시 테이블 저장
+            save_temp_query = """
+            INSERT INTO saved_interview_question (customer_id, 면접질문)
+            VALUES (%s, %s)
+            """
+            cursor.execute(save_temp_query, (customer_id, question))
+            
+            # 개인 기록 테이블에도 저장
+            save_personal_query = """
+            INSERT INTO personal_interview_question (customer_id, 면접질문)
+            VALUES (%s, %s)
+            """
+            cursor.execute(save_personal_query, (customer_id, question))
+            
+            self.db.commit()
+        except Exception as e:
+            print(f"질문 저장 중 에러 발생: {e}")
+        finally:
+            cursor.close()
+
+
     def tenacity_interview(self, state: State) -> State:
         """인성 면접 기능"""
         try:

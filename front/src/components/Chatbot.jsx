@@ -1,4 +1,3 @@
-// 불필요한 import/변수 제거
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -89,7 +88,8 @@ const Chatbot = () => {
   const [ttsUrl, setTtsUrl] = useState(null);
   // 기본 TTS는 꺼진 상태
   const [ttsEnabled, setTtsEnabled] = useState(false);
-
+  // 추가: 답변 스트리밍 상태 (답변 생성 완료 전까지 새로운 입력을 막기 위함)
+  const [isStreaming, setIsStreaming] = useState(false);
   // 녹음 상태
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
@@ -138,6 +138,7 @@ const Chatbot = () => {
     (fullText) => {
       const words = fullText.split(" ");
       let partialText = "";
+      setIsStreaming(true);
       setMessages((prev) => [
         ...prev,
         { sender: "bot", text: "", timestamp: new Date().toISOString() },
@@ -151,6 +152,10 @@ const Chatbot = () => {
               processMessage(partialText);
             return newMessages;
           });
+          if (index === words.length - 1) {
+            // 스트리밍 완료
+            setIsStreaming(false);
+          }
         }, index * 100);
       });
     },
@@ -171,6 +176,8 @@ const Chatbot = () => {
             timestamp: new Date().toISOString(),
           },
         ]);
+        // 짧은 메시지면 스트리밍 상태를 false로 보장
+        setIsStreaming(false);
       }
       if (ttsEnabled && message.includes("면접")) {
         speakText(message);
@@ -216,8 +223,17 @@ const Chatbot = () => {
     }
   }, [displayBotMessage]);
 
+  // 입력창 자동 포커스: 답변 생성이 완료되면 포커스
+  useEffect(() => {
+    if (!isLoading && !isStreaming && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isLoading, isStreaming, textareaRef]);
+
   // 메시지 전송 함수
   const sendMessage = useCallback(async () => {
+    // 답변 생성 중이면 새 메시지 전송 방지
+    if (isLoading || isStreaming) return;
     if (!input.trim()) return;
     const token = localStorage.getItem("token");
     if (!token) {
@@ -252,7 +268,7 @@ const Chatbot = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [input, displayUserMessage, displayBotMessage]);
+  }, [input, displayUserMessage, displayBotMessage, isLoading, isStreaming]);
 
   // 녹음 시작
   const startRecording = useCallback(async () => {
@@ -352,29 +368,29 @@ const Chatbot = () => {
     <div
       className="container-fluid"
       style={{
-        height: "100vh",
-        overflow: "hidden",
+        height: "99vh",
+        overflow: "visible",
         display: "flex",
         flexDirection: "column",
-        width: "100vw",
+        width: "101vw",
         maxWidth: "none",
       }}
     >
       <header
-        className="d-flex justify-content-between align-items-center px-3 px-md-5 py-3 container-fluid"
+        className="d-flex justify-content-between px-3 px-md-5 py-3 container-fluid"
         style={{
           backgroundColor: "#5e6aec",
           flexShrink: 0,
           width: "100vw",
         }}
       >
-        <div className="d-flex align-items-center">
+        <div className="d-flex align-items-start">
           <img
             src="/images/logo.png"
             alt="Company Logo"
             className="me-3"
             onClick={() => navigate("/")}
-            style={{ width: "150px", height: "60px" }}
+            style={{ width: "150px", height: "60px", cursor: "pointer" }}
           />
         </div>
         <div className="d-flex align-items-center">
@@ -417,22 +433,24 @@ const Chatbot = () => {
             overflowY: "auto",
             background: "#ffffff",
             border: "1px solid #dee2e6",
-            borderRadius: "19px",
+            borderRadius: "32px",
             padding: "1rem",
           }}
         >
           {messages.map((msg, index) => (
             <div
               key={`${msg.timestamp}-${index}`}
-              className={`chat p-2 my-2 mx-4 rounded d-flex align-items-start ${
+              className={`chat p-2 my-3 mx-5 d-flex align-items-start ${
                 msg.sender === "user"
                   ? "custom-user-message text-white align-self-end"
                   : "custom-bot-message"
               }`}
               style={{
                 maxWidth: "80%",
-                borderRadius: "80px",
+                borderRadius: "18px",
                 position: "relative",
+                paddingLeft: "16px",
+                paddingRight: "16px",
               }}
             >
               {msg.sender === "bot" && (
@@ -440,7 +458,12 @@ const Chatbot = () => {
                   <FontAwesomeIcon icon={faUserCircle} />
                 </div>
               )}
-              <div className="chat-text">{msg.text}</div>
+              <div
+                className="chat-text p-1 px-2"
+                style={{ fontSize: "1.05rem", fontWeight: 500 }}
+              >
+                {msg.text}
+              </div>
             </div>
           ))}
         </div>
@@ -463,7 +486,9 @@ const Chatbot = () => {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  sendMessage();
+                  if (!isLoading && !isStreaming) {
+                    sendMessage();
+                  }
                 }
               }}
               placeholder="메시지를 입력하세요."
@@ -528,16 +553,19 @@ const Chatbot = () => {
               <button
                 className="send-btn"
                 onClick={sendMessage}
+                disabled={isLoading || isStreaming}
                 aria-label="Send message"
                 style={{
                   borderRadius: "50%",
                   width: "40px",
                   height: "40px",
-                  backgroundColor: "#5e6aec",
+                  backgroundColor:
+                    isLoading || isStreaming ? "#ccc" : "#5e6aec",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
+                  border: "none",
                 }}
               >
                 <FontAwesomeIcon
@@ -549,7 +577,7 @@ const Chatbot = () => {
           </div>
         </div>
       </div>
-      {/* 전체 화면 로딩 오버레이 */}
+      {/* 전체 화면 로딩 오버레이: 이제 isLoading 상태에만 의존 */}
       <LoadingOverlay loading={isLoading} />
     </div>
   );

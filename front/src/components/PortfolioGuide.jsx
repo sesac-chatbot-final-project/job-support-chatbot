@@ -1,6 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHome } from "@fortawesome/free-solid-svg-icons";
 
 const PortfolioGuide = () => {
   const navigate = useNavigate();
@@ -54,12 +56,18 @@ const PortfolioGuide = () => {
           alt="Logo"
           className="h-50 cursor-pointer"
           onClick={() => navigate("/")}
+          style={{ cursor: "pointer" }}
         />
-        <button
-          onClick={() => navigate("/")}
-          className="btn btn-outline-light rounded-4"
-        >
-          홈으로
+        <button onClick={() => navigate("/")} className="btn rounded-5 fw-bold">
+          <FontAwesomeIcon
+            icon={faHome}
+            style={{
+              color: "white",
+              border: "none",
+              width: "1.4rem",
+              height: "1.4rem",
+            }}
+          />
         </button>
       </header>
 
@@ -100,10 +108,17 @@ const PortfolioGuide = () => {
         </div>
 
         <div className="mt-5 p-4 bg-light rounded-4">
-          <h3 className="fw-bold mb-3">포트폴리오 작성 예시</h3>
+          <h5 className="fw-bold mb-3 px-4 py-2" style={{ color: mainColor }}>
+            포트폴리오 작성 예시
+          </h5>
           <div className="p-3 bg-white rounded-4 shadow-sm">
-            <h5 className="fw-bold mb-3 py-2 px-3">프로젝트 설명 예시</h5>
-            <ul className="list-unstyled text-muted px-3">
+            <h5
+              className="fs-5 fw-bold mt-2 mb-2 py-2 px-3"
+              style={{ color: "GrayText" }}
+            >
+              프로젝트 설명 예시
+            </h5>
+            <ul className=" list-unstyled px-3" style={{ color: "GrayText" }}>
               <li>
                 <strong>• 프로젝트명:</strong> AI 기반 취업 지원 서비스
               </li>
@@ -141,14 +156,14 @@ const PortfolioGuide = () => {
           <button
             onClick={() => navigate("/customer-support")}
             className="btn btn-link text-secondary"
-            style={{ fontSize: "12px", lineHeight: "1.1" }}
+            style={{ fontSize: "16px", lineHeight: "1.1" }}
           >
             고객센터
           </button>
           <button
             onClick={() => navigate("/terms")}
             className="btn btn-link text-secondary"
-            style={{ fontSize: "12px", lineHeight: "1.1" }}
+            style={{ fontSize: "16px", lineHeight: "1.1" }}
           >
             이용약관
           </button>
