@@ -3,7 +3,7 @@
 ## WINDOW에서 실행하는 방법
 
 1.  git clone
-    `git clone -b ec2 https://github.com/sesac-chatbot-final-project/job-support-chatbot.git`
+    `git clone https://github.com/sesac-chatbot-final-project/job-support-chatbot.git`
 
 2.  파이썬 설치
 
