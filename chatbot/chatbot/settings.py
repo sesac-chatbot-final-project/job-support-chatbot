@@ -28,15 +28,12 @@ DEBUG = True
 ALLOWED_HOSTS = [    
     "localhost",
     "127.0.0.1",
-    "ec2-43-202-99-98.ap-northeast-2.compute.amazonaws.com",
-    "http://localhost:3000", 
-    "http://localhost:8000",
-    "http://ec2-43-202-99-98.ap-northeast-2.compute.amazonaws.com",
+    "3.35.150.125",
+    "sesac2.chunjae-learning.com",
+    "ec2-3-35-150-125.ap-northeast-2.compute.amazonaws.com",
 ]
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -65,11 +62,9 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "localhost",
     "127.0.0.1",
-    "43.202.99.98",
-    "ec2-43-202-99-98.ap-northeast-2.compute.amazonaws.com",
-    "http://localhost:3000", 
-    "http://localhost:8000",
-    "http://ec2-43-202-99-98.ap-northeast-2.compute.amazonaws.com",
+    "3.35.150.125",
+    "ec2-3-35-150-125.ap-northeast-2.compute.amazonaws.com",
+    "sesac2.chunjae-learning.com"
 ]
 
 # CORS_ALLOWED_ALL_ORIGINS = True
