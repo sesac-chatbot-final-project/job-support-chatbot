@@ -1,0 +1,229 @@
+/* 기본 스타일 */
+body {
+  font-family: "pretendard", sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  height: 100vh;
+  background-color: #ffffff;
+}
+
+.chat-container {
+  width: 300vw;
+  max-width: 1000px;
+  height: 100vh;
+  max-height: 900px;
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(54, 54, 54, 0.1);
+  display: flex;
+  flex-direction: column;
+  margin-top: 30px;
+}
+
+/* 채팅 컨테이너 */
+.chat-box {
+  font-family: "pretendard", sans-serif;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  border-radius: 20px;
+  padding: 18px;
+  scrollbar-width: thin;
+  scrollbar-color: #5e6aec #f8f9ff;
+}
+
+/* 스크롤바 스타일링 */
+.chat-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-box::-webkit-scrollbar-track {
+  background: #f8f9ff;
+  border-radius: 3px;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+  background-color: #5e6aec;
+  border-radius: 3px;
+}
+
+/* 채팅 메시지 */
+.chat {
+  font-family: "noto-sans", sans-serif;
+  margin: 15px;
+  padding: 10px;
+  border-radius: 50px;
+  max-width: 55%;
+  transition: opacity 0.3s ease;
+}
+
+.user-chat {
+  font-family: "pretendard", sans-serif;
+  background: #ffffff;
+  color: white;
+  margin-left: auto;
+  border-radius: 50px;
+}
+
+/* 사용자 메시지 (오른쪽) */
+.custom-user-message {
+  background-color: #5e6aec;
+  color: white;
+  border-radius: 50px 50px 0px 50px;
+  padding: 15px 20px;
+  align-self: flex-end;
+  animation: fadeIn 0.3s ease;
+}
+
+/* 챗봇 메시지 (왼쪽) */
+.custom-bot-message {
+  background-color: #f8f9ff;
+  color: #4a53be;
+  border-radius: 50px 50px 50px 0px;
+  padding: 15px 20px;
+  align-self: flex-start;
+  animation: fadeIn 0.3s ease;
+}
+
+/* 챗봇 아이콘 위치 */
+.bot-icon {
+  position: absolute;
+  left: -29px;
+  top: 2px;
+  font-size: 20px;
+  color: #737fff;
+}
+
+/* 전송 버튼 */
+.send-btn {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: none;
+  background-color: #5e6aec;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.send-btn:hover {
+  background-color: #4a53be;
+}
+
+/* 프로그레스 바 애니메이션 */
+@keyframes progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.animate-progress {
+  animation: progress 1s ease-in-out infinite;
+}
+
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.animate-loading {
+  animation: loading 1.5s infinite;
+}
+
+/* 메시지 페이드인 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+  .chat-container {
+    width: 200vw;
+    height: 200vh;
+    padding: 30px;
+  }
+
+  .chat-box {
+    padding: 20px;
+  }
+
+  .chat {
+    font-family: "pretendard", sans-serif;
+    margin-left: 25px;
+    padding: 15px 20px;
+    border-radius: 30px;
+    max-width: 60%;
+    font-size: 14px;
+    word-break: break-word;
+  }
+}
+
+/* 입력 필드 스타일링 */
+.form-control {
+  border: 1px solid #e0e0e0;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #5e6aec;
+  box-shadow: 0 0 0 0.2rem rgba(94, 106, 236, 0.25);
+}
+
+.custom-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  scrollbar-color: #989ff0 #f0f0f0; /* Firefox */
+}
+
+/* Webkit 브라우저(Chrome, Safari, Edge 등)를 위한 스타일 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #5e6aec;
+  border-radius: 4px;
+  opacity: 0.8;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #4958e3;
+}
+
+/* 스크롤바가 필요할 때만 표시 */
+.custom-scrollbar {
+  overflow-y: auto;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #4958e3;
+}

@@ -1,0 +1,14 @@
+// Job Assistant Bot Workflow
+digraph {
+	rankdir=LR
+	__start__ [label=__start__]
+	classify_intent [label=classify_intent]
+	search_job_chat [label=search_job_chat]
+	unknown_message [label=unknown_message]
+	__end__ [label=__end__]
+	__start__ -> classify_intent
+	search_job_chat -> __end__
+	unknown_message -> __end__
+	classify_intent -> search_job_chat
+	classify_intent -> unknown_message
+}
