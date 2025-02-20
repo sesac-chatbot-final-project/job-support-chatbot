@@ -22,9 +22,10 @@ export const SignUpPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/users/check_username/?username=${encodeURIComponent(
-          username
-        )}`
+        // `http://localhost:8000/api/users/check_username/?username=${encodeURIComponent(
+        //   username
+        // )}`
+        `/api/users/check_username/?username=${encodeURIComponent(username)}`
       );
       if (!response.ok) {
         setErrorMessage("중복 확인에 실패했습니다.");
@@ -53,7 +54,8 @@ export const SignUpPage = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/api/users/register/",
+        // "http://localhost:8000/api/users/register/",
+        "/api/users/register/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

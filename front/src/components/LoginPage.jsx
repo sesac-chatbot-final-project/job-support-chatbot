@@ -22,26 +22,40 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(""); // 기존 오류 메시지 초기화
-    setSuccessMessage(""); // ✅ 성공 메시지 초기화
+    setSuccessMessage(""); // 성공 메시지 초기화
     try {
-      const response = await fetch("http://localhost:8000/api/users/login/", {
+      const response = await fetch("/api/users/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
       });
+
+      // 먼저 응답 내용을 텍스트로 확인합니다.
+      const responseText = await response.text();
+      console.log("Response Text:", responseText);
+
+      // 응답을 JSON으로 파싱 시도
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error("JSON 파싱 오류:", jsonError);
+        setError("서버 응답을 파싱할 수 없습니다.");
+        return;
+      }
+
       if (!response.ok) {
-        const data = await response.json();
         setError(data.error || "로그인 실패");
         return;
       }
-      const data = await response.json();
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("userProfile", JSON.stringify(data.userProfile));
 
-      setSuccessMessage("로그인 성공!"); // ✅ 로그인 성공 메시지 표시
+      setSuccessMessage("로그인 성공!"); // 로그인 성공 메시지 표시
       setTimeout(() => navigate("/settings"), 1500); // 1.5초 후 페이지 이동
     } catch (error) {
-      console.error(error);
+      console.error("로그인 요청 오류:", error);
       setError("로그인 요청 중 오류가 발생했습니다.");
     }
   };
@@ -99,7 +113,7 @@ const LoginPage = () => {
         {/* 에러 메시지 (빨간색) */}
         {error && <div className="alert alert-danger">{error}</div>}
 
-        {/* ✅ 로그인 성공 메시지 (파란색) */}
+        {/* 로그인 성공 메시지 (파란색) */}
         {successMessage && (
           <div className="alert alert-primary">{successMessage}</div>
         )}

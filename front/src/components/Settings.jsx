@@ -48,7 +48,8 @@ const Settings = () => {
     const token = localStorage.getItem("token");
     if (isLoggedIn && token) {
       // 자기소개서 목록
-      fetch("http://127.0.0.1:8000/api/resumes/", {
+      // fetch("http://127.0.0.1:8000/api/resumes/", {
+      fetch("/api/resumes/", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -59,7 +60,8 @@ const Settings = () => {
         .catch((err) => console.error("Resumes API 에러:", err));
 
       // 면접 연습 내역
-      fetch("http://127.0.0.1:8000/api/interviews/", {
+      // fetch("http://127.0.0.1:8000/api/interviews/", {
+      fetch("/api/interviews/", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -70,7 +72,8 @@ const Settings = () => {
         .catch((err) => console.error("Interviews API 에러:", err));
 
       // 확인한 채용공고 목록
-      fetch("http://127.0.0.1:8000/api/job-postings/", {
+      // fetch("http://127.0.0.1:8000/api/job-postings/", {
+      fetch("/api/job-postings/", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -121,7 +124,8 @@ const Settings = () => {
               <td>
                 {item.date}{" "}
                 <button
-                  className="btn btn-sm btn-outline-primary ms-3"
+                  className="btn btn-sm ms-3 px-4 rounded-5"
+                  style={{ backgroundColor: "#5e6aec", color: "white" }}
                   onClick={() => viewResume(item)}
                 >
                   보기
@@ -165,7 +169,7 @@ const Settings = () => {
             <th>제목</th>
             <th>회사명</th>
             <th>날짜</th>
-            <th style={{ width: "120px" }}>링크</th>
+            <th style={{ width: "160px", height: "26px" }}>링크</th>
           </tr>
         </thead>
         <tbody>
@@ -176,7 +180,8 @@ const Settings = () => {
               <td>{item.date}</td>
               <td>
                 <button
-                  className="btn btn-sm btn-outline-primary"
+                  className="btn btn-sm rounded-5"
+                  style={{ backgroundColor: "#5e6aec", color: "white" }}
                   onClick={() => {
                     if (item.link) {
                       window.open(item.link, "_blank");

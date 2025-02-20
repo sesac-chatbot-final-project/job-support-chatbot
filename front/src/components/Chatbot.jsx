@@ -218,7 +218,14 @@ const Chatbot = () => {
     if (!didInit.current) {
       didInit.current = true;
       displayBotMessage(
-        "안녕하세요, 취업 지원 서비스 챗봇입니다! 채용 공고, 자기소개서 초안 작성, 모의 면접 기능이 있습니다. 무엇을 도와드릴까요?"
+        "안녕하세요, 취업 지원 서비스 챗봇입니다! \n\
+        채용 공고 제공, 자기소개서 초안 작성, 모의 면접 기능이 있습니다.\n\n\
+        ℹ️ 채용 공고 제공을 원하시면 직무 이름과 함께 공고를 요청해주세요. \n\
+            🌟 Java 등 기술 이름을 영어로 입력하시는 것을 추천드립니다! (예: Java 개발자 공고 알려줘) \n\n\
+        🧾 자기소개서 초안 작성을 원하시면 자기소개서 작성을 요청해주세요. \n\
+            🌟 특정 채용 공고를 참고하여 작성을 원하시면, 채용 공고를 탐색한 이후에 기능을 이용해주세요. \n\n\
+        🗨️ 모의 면접의 경우 인성 면접과 기술 면접으로 나누어져 있으며, 기술 면접의 경우 자기소개서 작성 이후 이용하실 수 있습니다.\n\n\
+        무엇을 도와드릴까요?"
       );
     }
   }, [displayBotMessage]);
@@ -247,7 +254,8 @@ const Chatbot = () => {
     setTtsUrl(null);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/chat/", {
+      // const response = await fetch("http://127.0.0.1:8000/api/chat/", {
+      const response = await fetch("/api/chat/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -338,7 +346,8 @@ const Chatbot = () => {
       const transcript = response.data.text;
       displayUserMessage(transcript);
 
-      const chatResponse = await fetch("http://127.0.0.1:8000/api/chat/", {
+      // const chatResponse = await fetch("http://127.0.0.1:8000/api/chat/", {
+      const chatResponse = await fetch("/api/chat/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

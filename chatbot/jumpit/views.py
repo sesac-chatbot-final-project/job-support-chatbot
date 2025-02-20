@@ -31,7 +31,7 @@ def get_db_connection():
     )
 
 # 챗봇 상태 초기값
-state = {
+INITIAL_STATE = {
     "user_id": "",
     "user_input": "",
     "chat_history": [],
@@ -86,6 +86,9 @@ def jwt_required(view_func):
 @jwt_required
 def chatbot_api(request):
     try:
+        state = request.session.get('state', None)
+        if state is None:
+            state = INITIAL_STATE.copy()
         state["user_id"] = request.user_payload["username"]
 
         if not request.body:
@@ -106,6 +109,8 @@ def chatbot_api(request):
             return JsonResponse({"error": "워크플로우 실행 결과가 없습니다."}, status=500)
         print(result)
         state.update(result)
+
+        request.session['state'] = state
 
         response_data = {
             "message": state.get("response", "죄송합니다. 처리 중 문제가 발생했습니다.")
@@ -180,6 +185,7 @@ def login_user(request):
                 "name": user.username,
                 "email": user.email,
             }
+            request.session['state'] = INITIAL_STATE.copy()
             return JsonResponse({
                 "message": "로그인에 성공했습니다.",
                 "token": token,

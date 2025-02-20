@@ -28,6 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = [    
     "localhost",
     "127.0.0.1",
+    "ec2-43-202-99-98.ap-northeast-2.compute.amazonaws.com",
     "http://localhost:3000", 
     "http://localhost:8000",
     "http://ec2-43-202-99-98.ap-northeast-2.compute.amazonaws.com",
@@ -62,6 +63,10 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
+    "localhost",
+    "127.0.0.1",
+    "43.202.99.98",
+    "ec2-43-202-99-98.ap-northeast-2.compute.amazonaws.com",
     "http://localhost:3000", 
     "http://localhost:8000",
     "http://ec2-43-202-99-98.ap-northeast-2.compute.amazonaws.com",
