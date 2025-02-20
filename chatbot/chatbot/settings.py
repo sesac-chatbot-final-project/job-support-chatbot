@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+
 import os
 from pathlib import Path
 
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure--4@b1m%x@m3g**l0@_i^bc5e22*gfdjan3(1&ww21kx7hkxc)('
+SECRET_KEY = "django-insecure--4@b1m%x@m3g**l0@_i^bc5e22*gfdjan3(1&ww21kx7hkxc)("
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 # DEBUG = False
-ALLOWED_HOSTS = [    
+ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "3.35.150.125",
@@ -35,69 +36,68 @@ ALLOWED_HOSTS = [
 
 # Application definition
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'LSJ',
-    'corsheaders',
-    'rest_framework',
-    'jumpit',
-    
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "LSJ",
+    "corsheaders",
+    "rest_framework",
+    "jumpit",
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "localhost",
-    "127.0.0.1",
-    "3.35.150.125",
-    "ec2-3-35-150-125.ap-northeast-2.compute.amazonaws.com",
-    "sesac2.chunjae-learning.com"
+    "http://127.0.0.1",
+    "http://localhost",
+    "http://localhost:3000",
+    "http://localhost:8000",
 ]
+
 
 # CORS_ALLOWED_ALL_ORIGINS = True
 
 # API 요청 허용
 CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
 ]
 
-ROOT_URLCONF = 'chatbot.urls'
+ROOT_URLCONF = "chatbot.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['client'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": ["client"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'chatbot.wsgi.application'
+WSGI_APPLICATION = "chatbot.wsgi.application"
 
 
 # Database
@@ -106,25 +106,26 @@ WSGI_APPLICATION = 'chatbot.wsgi.application'
 import os
 from dotenv import load_dotenv
 import pymysql
+
 pymysql.install_as_MySQLdb()  # PyMySQL을 MySQLdb로 인식하도록 설정
 
 # .env 파일 로드
 load_dotenv()
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',  # MySQL/MariaDB 백엔드
-        'NAME': os.getenv('DB_NAME'),         # .env의 DB_NAME
-        'USER': os.getenv('DB_USER'),         # .env의 DB_USER
-        'PASSWORD': os.getenv('DB_PASSWORD'), # .env의 DB_PASSWORD
-        'HOST': os.getenv('DB_HOST'),         # .env의 DB_HOST
-        'PORT': os.getenv('DB_PORT'),         # .env의 DB_PORT
+    "default": {
+        "ENGINE": "django.db.backends.mysql",  # MySQL/MariaDB 백엔드
+        "NAME": os.getenv("DB_NAME"),  # .env의 DB_NAME
+        "USER": os.getenv("DB_USER"),  # .env의 DB_USER
+        "PASSWORD": os.getenv("DB_PASSWORD"),  # .env의 DB_PASSWORD
+        "HOST": os.getenv("DB_HOST"),  # .env의 DB_HOST
+        "PORT": os.getenv("DB_PORT"),  # .env의 DB_PORT
     }
 }
 
 # JWT 관련 환경 변수 추가 (실제 값은 .env 파일에 설정)
-JWT_SECRET = os.getenv('JWT_SECRET', 'your_default_secret_key')
-JWT_EXP_DELTA_SECONDS = int(os.getenv('JWT_EXP_DELTA_SECONDS', 3600))
+JWT_SECRET = os.getenv("JWT_SECRET", "your_default_secret_key")
+JWT_EXP_DELTA_SECONDS = int(os.getenv("JWT_EXP_DELTA_SECONDS", 3600))
 
 
 # Password validation
@@ -132,16 +133,16 @@ JWT_EXP_DELTA_SECONDS = int(os.getenv('JWT_EXP_DELTA_SECONDS', 3600))
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -149,9 +150,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -167,4 +168,4 @@ STATIC_URL = "/static/"
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

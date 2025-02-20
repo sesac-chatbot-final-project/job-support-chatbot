@@ -48,8 +48,7 @@ const Settings = () => {
     const token = localStorage.getItem("token");
     if (isLoggedIn && token) {
       // 자기소개서 목록
-      // fetch("http://127.0.0.1:8000/api/resumes/", {
-      fetch("/api/resumes/", {
+      fetch("http://127.0.0.1:8000/api/resumes/", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -60,8 +59,7 @@ const Settings = () => {
         .catch((err) => console.error("Resumes API 에러:", err));
 
       // 면접 연습 내역
-      // fetch("http://127.0.0.1:8000/api/interviews/", {
-      fetch("/api/interviews/", {
+      fetch("http://127.0.0.1:8000/api/interviews/", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -72,8 +70,7 @@ const Settings = () => {
         .catch((err) => console.error("Interviews API 에러:", err));
 
       // 확인한 채용공고 목록
-      // fetch("http://127.0.0.1:8000/api/job-postings/", {
-      fetch("/api/job-postings/", {
+      fetch("http://127.0.0.1:8000/api/job-postings/", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
