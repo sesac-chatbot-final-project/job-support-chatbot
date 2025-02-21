@@ -60,11 +60,11 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "localhost",
-    "127.0.0.1",
-    "3.35.150.125",
-    "ec2-3-35-150-125.ap-northeast-2.compute.amazonaws.com",
-    "sesac2.chunjae-learning.com"
+    "http://127.0.0.1",
+    "https://3.35.150.125", 
+    "https://ec2-3-35-150-125.ap-northeast-2.compute.amazonaws.com",
+    "http://localhost",
+    "https://sesac2.chunjae-learning.com",
 ]
 
 # CORS_ALLOWED_ALL_ORIGINS = True

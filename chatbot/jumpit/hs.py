@@ -67,7 +67,7 @@ class JobAssistantBot:
             self._initialize_prompts()
             print("프롬프트 초기화 성공")
             
-            # self.create_and_save_customer_db()
+            self.create_and_save_customer_db()
             self.create_saved_jobs_table()
             self.create_selected_job_posting_table()
             self.create_saved_cover_letter_table()
@@ -458,25 +458,25 @@ class JobAssistantBot:
             자기소개서: {cover_letter}
             결과:""")
     
-    # def create_and_save_customer_db(self):
-    #     """회원 아이디 저장하는 DB"""
-    #     cursor = self.db.cursor()
-    #     create_table_query = """
-    #     CREATE TABLE IF NOT EXISTS customer (
-    #         customer_id VARCHAR(20) PRIMARY KEY
-    #     )
-    #     """
-    #     cursor.execute(create_table_query)
-    #     self.db.commit()
-    #     cursor.execute("SELECT customer_id FROM customer")
-    #     existing_users = set(row[0] for row in cursor.fetchall())
-    #     users = User.objects.all()
-    #     new_users = [user.username for user in users if user.username not in existing_users]
-    #     if new_users:
-    #         insert_query = "INSERT INTO customer (customer_id) VALUES (%s)"
-    #         cursor.executemany(insert_query, [(user,) for user in new_users])
-    #         self.db.commit()
-    #     cursor.close()
+    def create_and_save_customer_db(self):
+        """회원 아이디 저장하는 DB"""
+        cursor = self.db.cursor()
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS customer (
+            customer_id VARCHAR(20) PRIMARY KEY
+        )
+        """
+        cursor.execute(create_table_query)
+        self.db.commit()
+        cursor.execute("SELECT customer_id FROM customer")
+        existing_users = set(row[0] for row in cursor.fetchall())
+        users = User.objects.all()
+        new_users = [user.username for user in users if user.username not in existing_users]
+        if new_users:
+            insert_query = "INSERT INTO customer (customer_id) VALUES (%s)"
+            cursor.executemany(insert_query, [(user,) for user in new_users])
+            self.db.commit()
+        cursor.close()
     
     def create_saved_jobs_table(self):
         """선택한 직무의 공고들 저장하는 DB"""
